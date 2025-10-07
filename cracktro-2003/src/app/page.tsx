@@ -1,6 +1,6 @@
 "use client";
-import Cracktro2003Modern from "@/components/Cracktro2003Modern";
+import DesktopShell from "@/desktop/DesktopShell";
 
 export default function Page() {
-  return <Cracktro2003Modern />;
+  return <DesktopShell />;
 }
