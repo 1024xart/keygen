@@ -1,14 +1,14 @@
+// src/desktop/DesktopShell.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import DesktopIcon from "./DesktopIcon";
-import Taskbar from "./Taskbar";
 import Cracktro2003Modern from "@/components/Cracktro2003Modern";
 
 export default function DesktopShell() {
   const [open, setOpen] = useState(false);
   const [openTrigger, setOpenTrigger] = useState<number | undefined>(undefined);
-  const [startOpen, setStartOpen] = useState(false);
+  const [startOpen, setStartOpen] = useState(false); // if you already added Taskbar
 
   // ESC closes the app
   useEffect(() => {
@@ -23,17 +23,25 @@ export default function DesktopShell() {
     <div
       className="desktop"
       onMouseDown={() => (document.activeElement as HTMLElement | null)?.blur()}
-      onClick={() => startOpen && setStartOpen(false)} // click desktop closes Start
+      onClick={() => startOpen && setStartOpen(false)}
     >
       {/* icons column (top-left) */}
       <div className="icons">
+        {/* NEW: Recycle Bin above SEQUENCE.exe */}
+        <DesktopIcon
+          label="Recycle Bin"
+          iconSrc="/recycle-bin.png"     // put this file in /public
+          onOpen={() => {
+            // placeholder – we can wire a bin window later
+          }}
+        />
+
         <DesktopIcon
           label="SEQUENCE.exe"
-          iconSrc="/sequence-icon.png"
+          iconSrc="/sequence-icon.png"   // you already added this
           onOpen={() => {
             setOpen(true);
-            setOpenTrigger(Date.now());
-            setStartOpen(false);
+            setOpenTrigger(Date.now()); // triggers audio fade in app
           }}
         />
       </div>
@@ -41,34 +49,34 @@ export default function DesktopShell() {
       {/* frameless app layer */}
       {open && (
         <div className="layer" role="dialog" aria-label="SEQUENCE-1024x">
-          <Cracktro2003Modern
-            embedded
-            openTrigger={openTrigger}
-            onExit={() => setOpen(false)} // <-- closes without reloading
-          />
+          <Cracktro2003Modern embedded openTrigger={openTrigger} onExit={() => setOpen(false)} />
         </div>
       )}
-
-      {/* taskbar */}
-      <Taskbar
-        startOpen={startOpen}
-        onToggleStart={() => setStartOpen((v) => !v)}
-      />
 
       <style jsx>{`
         .desktop {
           min-height: 100svh;
           background: #000 url("/wallpapers/sequence-desktop.jpg") center / cover no-repeat;
-          position: relative; overflow: hidden; user-select: none;
-          padding-bottom: 36px; /* keep content above taskbar if needed */
+          background-size: cover;
+          background-position: center;
+          position: relative;
+          overflow: hidden;
+          user-select: none;
         }
         .icons {
-          position: absolute; left: 18px; top: 18px;
-          display: grid; grid-auto-rows: min-content; gap: 14px; z-index: 2;
+          position: absolute;
+          left: 18px;
+          top: 18px;
+          display: grid;
+          grid-auto-rows: min-content;
+          gap: 14px; /* vertical stack spacing */
         }
+        /* centers the keygen panel with no extra chrome */
         .layer {
-          position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-          z-index: 3;
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
         }
       `}</style>
     </div>
