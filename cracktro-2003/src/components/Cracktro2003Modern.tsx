@@ -1,5 +1,6 @@
-// KeygenWin98Panel.tsx — dark early-Windows keygen + music (silent-autoplay + integrated mute)
+// KeygenWin98Panel.tsx — dark early-Windows keygen + music (TS-safe, silent autoplay)
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
@@ -102,8 +103,8 @@ export default function KeygenWin98Panel() {
     else setTimeout(() => aboutBtnRef.current?.focus(), 0);
   }, [aboutOpen]);
 
-  // --- music: silent-autoplay on load + fade up; integrated mute next to About ---
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // --- music: TS-safe silent-autoplay on load + fade up; integrated mute next to About ---
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [muted, setMuted] = useState(false);
 
   function fadeTo(target: number, ms = 800) {
@@ -113,51 +114,54 @@ export default function KeygenWin98Panel() {
     const t0 = performance.now();
     function step(t: number) {
       const k = Math.min(1, (t - t0) / ms);
-      a.volume = start + (target - start) * k;
+      const el = audioRef.current; if (!el) return;
+      el.volume = start + (target - start) * k;
       if (k < 1) requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
   }
 
   useEffect(() => {
-    const a = audioRef.current;
-    if (!a) return;
-    a.loop = true;
-    a.preload = "auto";
-    a.muted = false;
-    a.volume = 0; // start silent
+    const el = audioRef.current;
+    if (!el) return;
 
-    const tryPlay = () =>
-      a.play()
-        .then(() => {
-          // autoplay succeeded silently → fade up
-          fadeTo(MUSIC_TARGET_VOL, 900);
-        })
+    el.loop = true;
+    el.preload = "auto";
+    el.muted = false;
+    el.volume = 0; // start silent
+
+    const tryPlay = () => {
+      const a = audioRef.current;
+      if (!a) return Promise.resolve();
+      return a.play()
+        .then(() => { fadeTo(MUSIC_TARGET_VOL, 900); })
         .catch(() => {
-          // blocked: wait for first interaction, then start audible immediately
-          const resume = () => {
-            a.play().then(() => { a.volume = MUSIC_TARGET_VOL; });
-            window.removeEventListener("pointerdown", resume);
-            window.removeEventListener("keydown", resume);
+          const onInteract = () => {
+            const b = audioRef.current;
+            if (!b) return;
+            b.play().then(() => { b.volume = MUSIC_TARGET_VOL; }).catch(()=>{});
+            window.removeEventListener("pointerdown", onInteract);
+            window.removeEventListener("keydown", onInteract);
           };
-          window.addEventListener("pointerdown", resume);
-          window.addEventListener("keydown", resume);
+          window.addEventListener("pointerdown", onInteract);
+          window.addEventListener("keydown", onInteract);
         });
+    };
 
     tryPlay();
 
     return () => {
-      a.pause();
+      const a = audioRef.current;
+      if (a) a.pause();
     };
   }, []);
 
   const toggleMute = () => {
     const a = audioRef.current;
     if (!a) return;
-    if (a.paused) { a.play().catch(()=>{}); }
-    const next = !a.muted;
-    a.muted = next;
-    setMuted(next);
+    if (a.paused) { void a.play(); } // avoid unhandled promise
+    a.muted = !a.muted;
+    setMuted(a.muted); // reflect the actual element state
   };
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key.toLowerCase() === "m") toggleMute(); };
@@ -244,7 +248,7 @@ export default function KeygenWin98Panel() {
           </div>
         )}
 
-        {/* Buttons — About (small) + Mute icon integrated */}
+        {/* Buttons — About (small) + Mute icon */}
         <div className="buttons">
           <button
             className="btn"
@@ -262,12 +266,10 @@ export default function KeygenWin98Panel() {
             Exit
           </button>
 
-          {/* small About button */}
           <button className="btn btnSmall" ref={aboutBtnRef} onClick={() => setAboutOpen(true)}>
             About
           </button>
 
-          {/* icon mute button (no extra border effects) */}
           <button className="iconBtn" onClick={toggleMute} aria-pressed={!muted} title={muted ? "Sound off (M)" : "Sound on (M)"}>
             {muted ? (
               <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
@@ -357,13 +359,7 @@ export default function KeygenWin98Panel() {
             radial-gradient(60% 120% at 0% 50%, rgba(182,103,255,0.10), transparent 60%),
             radial-gradient(40% 100% at 100% 40%, rgba(91,47,176,0.12), transparent 70%);
         }
-        .bannerImg {
-          width: 100%;
-          height: 100%;
-          object-fit: fill;
-          object-position: left center;
-          display: block;
-        }
+        .bannerImg { width: 100%; height: 100%; object-fit: fill; object-position: left center; display: block; }
 
         /* Field blocks */
         .field { margin-bottom: 10px; }
@@ -371,21 +367,11 @@ export default function KeygenWin98Panel() {
 
         /* Inputs (dark) */
         .input, .select {
-          width: 100%;
-          height: 22px;
-          padding: 0 6px;
-          background: #111;
-          color: #eaeaea;
-          border: none;
-          outline: none;
-          font: 11px Tahoma, "MS Sans Serif";
-          caret-color: #eaeaea;
+          width: 100%; height: 22px; padding: 0 6px; background: #111; color: #eaeaea;
+          border: none; outline: none; font: 11px Tahoma, "MS Sans Serif"; caret-color: #eaeaea;
         }
         .input::placeholder { color: #777; }
-        .sunken {
-          border: 1px solid #3a3a3a;
-          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a;
-        }
+        .sunken { border: 1px solid #3a3a3a; box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a; }
         .select.placeholder { color: #7a7a7a; }
         .select:not(.placeholder) { color: #eaeaea; }
         .select option[value=""] { color: #7a7a7a; }
@@ -394,17 +380,11 @@ export default function KeygenWin98Panel() {
         /* Activation row */
         .activationRow { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
         .serialBox { height: 22px; display:flex; align-items:center; justify-content:center; padding: 0 6px; background: #111; }
-        .serial {
-          flex: 1; font: 13px "Lucida Console", Consolas, monospace; letter-spacing: 1px;
-          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; color: #f0f0f0;
-        }
+        .serial { flex: 1; font: 13px "Lucida Console", Consolas, monospace; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; color: #f0f0f0; }
         .copyBtn { min-width: 120px; }
 
         /* Progress (dark) */
-        .progress {
-          height: 18px; background: #1a1a1a; margin-top: 8px;
-          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #5a5a5a;
-        }
+        .progress { height: 18px; background: #1a1a1a; margin-top: 8px; box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #5a5a5a; }
         .bar { height: 100%; background: linear-gradient(90deg, #5b2fb0, #b667ff); }
         .status { margin-top: 4px; color: #cfcfcf; }
 
@@ -413,8 +393,7 @@ export default function KeygenWin98Panel() {
           display: grid;
           grid-template-columns: 1fr 1fr 1fr auto auto;
           align-items: center;
-          gap: 8px;
-          margin-top: 12px;
+          gap: 8px; margin-top: 12px;
         }
         .btn {
           height: 28px; background: #1a1a1a; color: #e6e6e6; border: 1px solid #000;
@@ -424,16 +403,13 @@ export default function KeygenWin98Panel() {
         .btn:focus, .btn:focus-visible { outline: none; }
         :global(button::-moz-focus-inner) { border: 0; }
         .btn:active { box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a, 0 0 0 1px #000; transform: translateY(1px); }
-
         .btnSmall { padding: 0 10px; min-width: 64px; }
 
-        /* Icon mute button (integrated style) */
+        /* Icon mute button */
         .iconBtn {
-          height: 28px; width: 32px;
-          background: #1a1a1a; color: #e6e6e6; border: 1px solid #000;
+          height: 28px; width: 32px; background: #1a1a1a; color: #e6e6e6; border: 1px solid #000;
           box-shadow: inset 1px 1px 0 #6a6a6a, inset -1px -1px 0 #000, 0 0 0 1px #000;
-          display: grid; place-items: center; cursor: pointer;
-          -webkit-appearance: none; appearance: none; border-radius: 0; padding: 0;
+          display: grid; place-items: center; cursor: pointer; -webkit-appearance: none; appearance: none; border-radius: 0; padding: 0;
         }
         .iconBtn:focus, .iconBtn:focus-visible { outline: none; }
         .iconBtn:active { box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a, 0 0 0 1px #000; transform: translateY(1px); }
