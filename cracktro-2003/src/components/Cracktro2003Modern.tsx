@@ -2,7 +2,13 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 
 const BANNER_URL = "/banner.gif";
 const VERSION = "v0.2.0";
@@ -119,38 +125,53 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
     else setTimeout(() => aboutBtnRef.current?.focus(), 0);
   }, [aboutOpen]);
 
-  // --- music (safe fade) ---
+  // --- music (safe fade with stable callbacks) ---
   const audioRef = useRef<HTMLAudioElement>(null);
   const [muted, setMuted] = useState(false);
   const fadeRAF = useRef<number | null>(null);
   const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
-  const setSafeVolume = (v: number) => {
+
+  const setSafeVolume = useCallback((v: number) => {
     const a = audioRef.current;
     if (!a) return;
     a.volume = clamp01(+v || 0);
-  };
-  const cancelFade = () => {
+  }, []);
+
+  const cancelFade = useCallback(() => {
     if (fadeRAF.current) {
       cancelAnimationFrame(fadeRAF.current);
       fadeRAF.current = null;
     }
-  };
-  function fadeTo(target: number, ms = 800) {
+  }, []);
+
+  const fadeTo = useCallback(
+    (target: number, ms = 800) => {
+      const a = audioRef.current;
+      if (!a) return;
+      cancelFade();
+      const start = clamp01(a.volume || 0);
+      const goal = clamp01(target);
+      const t0 = performance.now();
+      const step = (t: number) => {
+        const k = Math.min(1, (t - t0) / ms);
+        const next = start + (goal - start) * k;
+        setSafeVolume(Number(next.toFixed(4)));
+        if (k < 1) fadeRAF.current = requestAnimationFrame(step);
+        else fadeRAF.current = null;
+      };
+      fadeRAF.current = requestAnimationFrame(step);
+    },
+    [cancelFade, setSafeVolume]
+  );
+
+  const toggleMute = useCallback(() => {
     const a = audioRef.current;
     if (!a) return;
     cancelFade();
-    const start = clamp01(a.volume || 0);
-    const goal = clamp01(target);
-    const t0 = performance.now();
-    const step = (t: number) => {
-      const k = Math.min(1, (t - t0) / ms);
-      const next = start + (goal - start) * k;
-      setSafeVolume(Number(next.toFixed(4)));
-      if (k < 1) fadeRAF.current = requestAnimationFrame(step);
-      else fadeRAF.current = null;
-    };
-    fadeRAF.current = requestAnimationFrame(step);
-  }
+    if (a.paused) void a.play();
+    a.muted = !a.muted;
+    setMuted(a.muted);
+  }, [cancelFade]);
 
   // try to autoplay on mount (will resume on first interaction if blocked)
   useEffect(() => {
@@ -162,39 +183,43 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
     el.muted = false;
     setSafeVolume(0);
 
-    const tryPlay = () => {
-      const a = audioRef.current;
-      if (!a) return Promise.resolve();
-      return a
+    let onInteract: ((e: Event) => void) | null = null;
+
+    const tryPlay = () =>
+      el
         .play()
         .then(() => {
           fadeTo(MUSIC_TARGET_VOL, 900);
         })
         .catch(() => {
-          const onInteract = () => {
-            const b = audioRef.current;
-            if (!b) return;
-            b.play()
+          onInteract = () => {
+            el
+              .play()
               .then(() => {
                 setSafeVolume(MUSIC_TARGET_VOL);
               })
               .catch(() => {});
-            window.removeEventListener("pointerdown", onInteract);
-            window.removeEventListener("keydown", onInteract);
+            if (onInteract) {
+              window.removeEventListener("pointerdown", onInteract);
+              window.removeEventListener("keydown", onInteract);
+              onInteract = null;
+            }
           };
           window.addEventListener("pointerdown", onInteract);
           window.addEventListener("keydown", onInteract);
         });
-    };
 
     void tryPlay();
 
     return () => {
       cancelFade();
-      const a = audioRef.current;
-      if (a) a.pause();
+      el.pause(); // use captured element to appease the lint warning
+      if (onInteract) {
+        window.removeEventListener("pointerdown", onInteract);
+        window.removeEventListener("keydown", onInteract);
+      }
     };
-  }, []);
+  }, [fadeTo, setSafeVolume, cancelFade]);
 
   // when opened from desktop, force a fresh play + fade
   useEffect(() => {
@@ -203,28 +228,17 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
     if (!a) return;
     a.muted = false;
     setSafeVolume(0);
-    a.play()
-      .then(() => fadeTo(MUSIC_TARGET_VOL, 700))
-      .catch(() => {});
-  }, [openTrigger]);
+    a.play().then(() => fadeTo(MUSIC_TARGET_VOL, 700)).catch(() => {});
+  }, [openTrigger, fadeTo, setSafeVolume]);
 
-  const toggleMute = () => {
-    const a = audioRef.current;
-    if (!a) return;
-    cancelFade();
-    if (a.paused) {
-      void a.play();
-    }
-    a.muted = !a.muted;
-    setMuted(a.muted);
-  };
+  // keybinding for mute
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === "m") toggleMute();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [toggleMute]);
 
   const toCopy = serialView || activation;
 
