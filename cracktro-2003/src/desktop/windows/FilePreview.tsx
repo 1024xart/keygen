@@ -8,18 +8,20 @@ type Props = {
   onClose: () => void;
 };
 
-// Type guards to safely narrow the union at runtime
-function isImageEntry(f: FileEntry): f is FileEntry & { src: string; alt?: string } {
-  return (f as any).type === "image" && typeof (f as any).src === "string";
+// Narrow the union using the discriminant `type`
+type ImageEntry = Extract<FileEntry, { type: "image" }>;
+type TextishEntry = Extract<FileEntry, { type: "text" | "encrypted" }>;
+
+function isImageEntry(f: FileEntry): f is ImageEntry {
+  return f.type === "image";
 }
-function isTextishEntry(f: FileEntry): f is FileEntry & { content: string } {
-  const t = (f as any).type;
-  return (t === "text" || t === "encrypted") && typeof (f as any).content === "string";
+function isTextishEntry(f: FileEntry): f is TextishEntry {
+  return f.type === "text" || f.type === "encrypted";
 }
 
 export default function FilePreview({ file, onClose }: Props) {
-  const isImage = isImageEntry(file);
-  const isTextish = isTextishEntry(file);
+  const imageFile: ImageEntry | null = isImageEntry(file) ? (file as ImageEntry) : null;
+  const textFile: TextishEntry | null = isTextishEntry(file) ? (file as TextishEntry) : null;
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -38,13 +40,13 @@ export default function FilePreview({ file, onClose }: Props) {
         </div>
 
         <div className="body">
-          {isImage ? (
+          {imageFile ? (
             <div className="imgWrap">
-              <img src={file.src} alt={file.alt ?? file.name} />
+              <img src={imageFile.src} alt={imageFile.alt ?? imageFile.name} />
             </div>
-          ) : isTextish ? (
-            <pre className={`content ${file.type === "encrypted" ? "enc" : ""}`}>
-              {file.content}
+          ) : textFile ? (
+            <pre className={`content ${textFile.type === "encrypted" ? "enc" : ""}`}>
+              {textFile.content}
             </pre>
           ) : (
             <div className="content">Can’t preview this file.</div>
