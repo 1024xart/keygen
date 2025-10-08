@@ -1,5 +1,6 @@
 // src/desktop/DesktopIcon.tsx
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { useState } from "react";
 
@@ -9,7 +10,11 @@ type Props = {
   iconSrc?: string; // path under /public (e.g. "/sequence-icon.png")
 };
 
-export default function DesktopIcon({ label, onOpen, iconSrc = "/sequence-icon.png" }: Props) {
+export default function DesktopIcon({
+  label,
+  onOpen,
+  iconSrc = "/sequence-icon.png",
+}: Props) {
   const [selected, setSelected] = useState(false);
 
   return (
@@ -23,7 +28,15 @@ export default function DesktopIcon({ label, onOpen, iconSrc = "/sequence-icon.p
       title={label}
     >
       <span className="art">
-        <img src={iconSrc} alt="" />
+        <img
+          src={iconSrc}
+          alt=""
+          width={48}              // prevents giant first paint
+          height={48}             // prevents giant first paint
+          data-desktop-icon       // optional global CSS hook
+          decoding="async"
+          draggable={false}
+        />
       </span>
       <span className="label">{label}</span>
 
