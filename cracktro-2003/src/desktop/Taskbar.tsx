@@ -5,9 +5,25 @@ import React, { useEffect, useState } from "react";
 type Props = {
   startOpen: boolean;
   onToggleStart: () => void;
+  onLaunchThoughts?: () => void; // NEW
+  onLaunchStudio?: () => void;   // NEW
 };
 
-export default function Taskbar({ startOpen, onToggleStart }: Props) {
+export default function Taskbar({
+  startOpen,
+  onToggleStart,
+  onLaunchThoughts,
+  onLaunchStudio,
+}: Props) {
+  // keyboard helper for menu items
+  const onMenuKey = (e: React.KeyboardEvent, fn?: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      fn?.();
+      onToggleStart(); // close start
+    }
+  };
+
   return (
     <>
       <div className="taskbar">
@@ -43,7 +59,34 @@ export default function Taskbar({ startOpen, onToggleStart }: Props) {
             </div>
           </div>
 
-          {/* More menu sections can be added here later */}
+          {/* Programs section */}
+          <div className="sectionTitle">Programs</div>
+
+          <div
+            className="menuItem"
+            role="menuitem"
+            tabIndex={0}
+            onClick={() => {
+              onLaunchThoughts?.();
+              onToggleStart(); // close start
+            }}
+            onKeyDown={(e) => onMenuKey(e, onLaunchThoughts)}
+          >
+            Thoughts
+          </div>
+
+          <div
+            className="menuItem"
+            role="menuitem"
+            tabIndex={0}
+            onClick={() => {
+              onLaunchStudio?.();
+              onToggleStart(); // close start
+            }}
+            onKeyDown={(e) => onMenuKey(e, onLaunchStudio)}
+          >
+            Studio
+          </div>
         </div>
       )}
 
@@ -134,6 +177,26 @@ export default function Taskbar({ startOpen, onToggleStart }: Props) {
         .meta .name {
           font-weight: 700;
           letter-spacing: 0.3px;
+        }
+
+        .sectionTitle {
+          margin: 10px 2px 6px;
+          font-weight: 700;
+          color: #cfcfcf;
+          letter-spacing: 0.3px;
+        }
+        .menuItem {
+          margin: 6px 0;
+          padding: 6px 8px;
+          background: #111;
+          border: 1px solid #333;
+          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a;
+          cursor: default;
+          user-select: none;
+        }
+        .menuItem:active {
+          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a;
+          transform: translateY(1px);
         }
       `}</style>
     </>

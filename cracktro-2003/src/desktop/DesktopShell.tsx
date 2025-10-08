@@ -6,29 +6,39 @@ import Cracktro2003Modern from "@/components/Cracktro2003Modern";
 import Taskbar from "./Taskbar";
 import BinWindow, { type FileEntry } from "./windows/BinWindow";
 import FilePreview from "./windows/FilePreview";
+import Thoughts from "./apps/Thoughts";
+import Studio from "./apps/Studio";
 
 export default function DesktopShell() {
-  const [open, setOpen] = useState(false);
+  // SEQUENCE (keygen)
+  const [openSeq, setOpenSeq] = useState(false);
   const [openTrigger, setOpenTrigger] = useState<number | undefined>(undefined);
+
+  // Start menu
   const [startOpen, setStartOpen] = useState(false);
 
-  // Recycle Bin
+  // Bin
   const [binOpen, setBinOpen] = useState(false);
   const [binFiles] = useState<FileEntry[] | undefined>(undefined); // use BinWindow defaults
   const [previewing, setPreviewing] = useState<FileEntry | null>(null);
 
-  // ESC closes the app window (not the preview; preview uses overlay click or ×)
+  // Apps launched from Start
+  const [openThoughts, setOpenThoughts] = useState(false);
+  const [openStudio, setOpenStudio] = useState(false);
+
+  // ESC closes the top-most thing: preview → Bin → Studio → Thoughts → SEQUENCE
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (previewing) setPreviewing(null);
-        else if (binOpen) setBinOpen(false);
-        else setOpen(false);
-      }
+      if (e.key !== "Escape") return;
+      if (previewing) return setPreviewing(null);
+      if (binOpen) return setBinOpen(false);
+      if (openStudio) return setOpenStudio(false);
+      if (openThoughts) return setOpenThoughts(false);
+      if (openSeq) return setOpenSeq(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [previewing, binOpen]);
+  }, [previewing, binOpen, openStudio, openThoughts, openSeq]);
 
   return (
     <div
@@ -39,35 +49,35 @@ export default function DesktopShell() {
       {/* icons column (top-left) */}
       <div className="icons">
         <DesktopIcon
-          label="Recycle Bin"
+          label="Bin"
           iconSrc="/recycle-bin.png"
           onOpen={() => setBinOpen(true)}
         />
-
         <DesktopIcon
           label="SEQUENCE.exe"
           iconSrc="/sequence-icon.png"
           onOpen={() => {
-            setOpen(true);
+            setOpenSeq(true);
             setOpenTrigger(Date.now());
           }}
         />
+        {/* Thoughts & Studio removed from desktop; launched from Start */}
       </div>
 
-      {/* keygen app */}
-      {open && (
-        <div className="layer" role="dialog" aria-label="SEQUENCE-1024x">
+      {/* SEQUENCE keygen (embedded window) */}
+      {openSeq && (
+        <div className="layer center" role="dialog" aria-label="SEQUENCE-1024x">
           <Cracktro2003Modern
             embedded
             openTrigger={openTrigger}
-            onExit={() => setOpen(false)}
+            onExit={() => setOpenSeq(false)}
           />
         </div>
       )}
 
-      {/* recycle bin window */}
+      {/* Bin window */}
       {binOpen && (
-        <div className="binLayer" onMouseDown={(e) => e.stopPropagation()}>
+        <div className="layer binOffset" onMouseDown={(e) => e.stopPropagation()}>
           <BinWindow
             files={binFiles}
             onClose={() => setBinOpen(false)}
@@ -76,15 +86,37 @@ export default function DesktopShell() {
         </div>
       )}
 
-      {/* file preview modal */}
+      {/* File preview modal */}
       {previewing && (
         <FilePreview file={previewing} onClose={() => setPreviewing(null)} />
       )}
 
-      {/* taskbar */}
+      {/* Thoughts app */}
+      {openThoughts && (
+        <div className="layer offsetA" role="dialog" aria-label="Thoughts">
+          <Thoughts onClose={() => setOpenThoughts(false)} />
+        </div>
+      )}
+
+      {/* Studio app */}
+      {openStudio && (
+        <div className="layer offsetB" role="dialog" aria-label="Studio">
+          <Studio onClose={() => setOpenStudio(false)} />
+        </div>
+      )}
+
+      {/* Taskbar with Start menu */}
       <Taskbar
         startOpen={startOpen}
         onToggleStart={() => setStartOpen((v) => !v)}
+        onLaunchThoughts={() => {
+          setOpenThoughts(true);
+          setStartOpen(false);
+        }}
+        onLaunchStudio={() => {
+          setOpenStudio(true);
+          setStartOpen(false);
+        }}
       />
 
       <style jsx>{`
@@ -94,7 +126,7 @@ export default function DesktopShell() {
           position: relative;
           overflow: hidden;
           user-select: none;
-          padding-bottom: 44px;
+          padding-bottom: 44px; /* space for taskbar */
         }
         .icons {
           position: absolute;
@@ -107,17 +139,30 @@ export default function DesktopShell() {
         }
         .layer {
           position: absolute;
+          z-index: 3;
+        }
+        .center {
           left: 50%;
           top: 50%;
           transform: translate(-50%, -50%);
-          z-index: 3;
         }
-        .binLayer {
-          position: absolute;
+        .binOffset {
           left: 50%;
-          top: calc(50% + 180px); /* offset from keygen if both open */
+          top: calc(50% + 180px);
           transform: translate(-50%, -50%);
           z-index: 4;
+        }
+        .offsetA {
+          left: calc(50% - 160px);
+          top: calc(50% - 120px);
+          transform: translate(-50%, -50%);
+          z-index: 5;
+        }
+        .offsetB {
+          left: calc(50% + 160px);
+          top: calc(50% + 100px);
+          transform: translate(-50%, -50%);
+          z-index: 6;
         }
       `}</style>
     </div>
