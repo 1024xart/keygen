@@ -1,11 +1,15 @@
+// src/desktop/windows/FilePreview.tsx
 "use client";
 /* eslint-disable @next/next/no-img-element */
 import React from "react";
 import type { FileEntry } from "./BinWindow";
+import Window from "@/desktop/ui/Window";
 
 type Props = {
   file: FileEntry;
   onClose: () => void;
+  // NEW: allow DesktopShell to bump this preview to the front (taskbar click)
+  activateSignal?: number;
 };
 
 // Narrow the union using the discriminant `type`
@@ -19,94 +23,39 @@ function isTextishEntry(f: FileEntry): f is TextishEntry {
   return f.type === "text" || f.type === "encrypted";
 }
 
-export default function FilePreview({ file, onClose }: Props) {
+export default function FilePreview({ file, onClose, activateSignal }: Props) {
   const imageFile: ImageEntry | null = isImageEntry(file) ? (file as ImageEntry) : null;
   const textFile: TextishEntry | null = isTextishEntry(file) ? (file as TextishEntry) : null;
 
   return (
-    <div className="overlay" onClick={onClose}>
-      <div
-        className="win"
-        role="dialog"
-        aria-modal="true"
-        aria-label={file.name}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="titleBar">
-          <span>{file.name}</span>
-          <button className="titleClose" aria-label="Close" onClick={onClose}>
-            ×
-          </button>
-        </div>
-
-        <div className="body">
-          {imageFile ? (
-            <div className="imgWrap">
-              <img src={imageFile.src} alt={imageFile.alt ?? imageFile.name} />
-            </div>
-          ) : textFile ? (
-            <pre className={`content ${textFile.type === "encrypted" ? "enc" : ""}`}>
-              {textFile.content}
-            </pre>
-          ) : (
-            <div className="content">Can’t preview this file.</div>
-          )}
-        </div>
+    <Window
+      chrome="internal"
+      title={file.name}
+      onRequestClose={onClose}
+      // give the Window some sizing hints so it can center before measuring
+      widthHint={560}
+      heightHint={420}
+      activateSignal={activateSignal}
+    >
+      <div className="body">
+        {imageFile ? (
+          <div className="imgWrap">
+            <img src={imageFile.src} alt={imageFile.alt ?? imageFile.name} />
+          </div>
+        ) : textFile ? (
+          <pre className={`content ${textFile.type === "encrypted" ? "enc" : ""}`}>
+            {textFile.content}
+          </pre>
+        ) : (
+          <div className="content">Can’t preview this file.</div>
+        )}
       </div>
 
       <style jsx>{`
-        .overlay {
-          position: fixed;
-          inset: 0;
-          display: grid;
-          place-items: center;
-          background: rgba(0, 0, 0, 0.45);
-          z-index: 10;
-        }
-        .win {
-          width: 560px;
-          max-height: 70vh;
-          background: #0f0f0f;
-          color: #e6e6e6;
-          border: 1px solid #444;
-          box-shadow: 0 0 0 1px #333, 0 12px 40px rgba(0, 0, 0, 0.8);
-          font: 11px Tahoma, "MS Sans Serif", sans-serif;
-          display: grid;
-          grid-template-rows: auto 1fr;
-        }
-        .titleBar {
-          background: #1a1aa6;
-          color: #fff;
-          padding: 4px 8px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-weight: bold;
-        }
-        .titleClose {
-          background: #1a1a1a;
-          color: #e6e6e6;
-          border: 1px solid #000;
-          width: 22px;
-          height: 18px;
-          line-height: 16px;
-          padding: 0;
-          cursor: pointer;
-          box-shadow: inset 1px 1px 0 #6a6a6a, inset -1px -1px 0 #000;
-          -webkit-appearance: none;
-          appearance: none;
-          border-radius: 0;
-        }
-        .titleClose:focus {
-          outline: none;
-        }
-        .titleClose:active {
-          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a;
-        }
-
         .body {
           padding: 8px;
           overflow: auto;
+          max-height: 70vh;
         }
         .content {
           margin: 0;
@@ -122,7 +71,6 @@ export default function FilePreview({ file, onClose }: Props) {
           color: #b8a7ff;
           text-shadow: 0 0 6px rgba(182, 103, 255, 0.35);
         }
-
         .imgWrap {
           display: grid;
           place-items: center;
@@ -137,6 +85,6 @@ export default function FilePreview({ file, onClose }: Props) {
           display: block;
         }
       `}</style>
-    </div>
+    </Window>
   );
 }

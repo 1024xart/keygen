@@ -9,17 +9,20 @@ import React, {
   useState,
   useCallback,
 } from "react";
+import { setLicense, type AppId, type License } from "@/system/license";
 
 const BANNER_URL = "/banner.gif";
 const VERSION = "v0.2.0";
 const MUSIC_TARGET_VOL = 0.45; // 0..1
+const LIFESPAN_MS = 7 * 24 * 60 * 60 * 1000;
+
+// Keygen targets (local/narrow list)
+const APP_IDS = ["echo", "glitch", "bloom"] as const;
+type TargetId = typeof APP_IDS[number];
 
 type Props = {
-  /** Change this (e.g. Date.now()) when opening from desktop to force a fresh fade-in */
   openTrigger?: number;
-  /** When true, disables the fullscreen black wrapper so it can sit on the faux desktop */
   embedded?: boolean;
-  /** Called when the user clicks Exit — parent decides to close/hide the window */
   onExit?: () => void;
 };
 
@@ -32,9 +35,9 @@ function hash32(str: string, salt = 0) {
   }
   return h >>> 0;
 }
-function makeSerial(program: string, request: string) {
-  const base = `${program.trim().toUpperCase()}::${request.trim().toUpperCase()}`;
-  const h = hash32(base, 0x5EA1);
+function makeSerial(program: string | undefined, request: string) {
+  const base = `${(program ?? "").trim().toUpperCase()}::${request.trim().toUpperCase()}`;
+  const h = hash32(base, 0x5ea1);
   const a = (h & 0xffff).toString(16).padStart(4, "0");
   const b = ((h >>> 16) & 0xffff).toString(16).padStart(4, "0");
   const c = Math.abs(h).toString(36).slice(0, 4).toUpperCase();
@@ -51,10 +54,10 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
   const PANEL_WIDTH = 820;
 
   // Inputs
-  const [program, setProgram] = useState("");
+  const [program, setProgram] = useState<TargetId | "">("");
   const [request, setRequest] = useState("");
   const activation = useMemo(
-    () => (request ? makeSerial(program, request) : ""),
+    () => (request ? makeSerial(program || undefined, request) : ""),
     [program, request]
   );
 
@@ -85,6 +88,10 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
   // Progress
   const [patching, setPatching] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  // Stage a license while animating; commit at 100%
+  const pendingLicenseRef = useRef<License | null>(null);
+
   useEffect(() => {
     if (!patching) return;
     const id = setInterval(() => {
@@ -93,6 +100,10 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
         if (n >= 100) {
           clearInterval(id);
           setPatching(false);
+          if (pendingLicenseRef.current) {
+            setLicense(pendingLicenseRef.current);
+            pendingLicenseRef.current = null;
+          }
         }
         return n;
       });
@@ -213,7 +224,7 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
 
     return () => {
       cancelFade();
-      el.pause(); // use captured element to appease the lint warning
+      el.pause();
       if (onInteract) {
         window.removeEventListener("pointerdown", onInteract);
         window.removeEventListener("keydown", onInteract);
@@ -248,12 +259,11 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
         {/* Hidden audio element */}
         <audio ref={audioRef} style={{ position: "absolute", width: 0, height: 0, opacity: 0 }}>
           <source src="/keygen.mp3" type="audio/mpeg" />
-          <source src="/keygen.ogg" type="audio/ogg" />
         </audio>
 
         {/* Banner */}
         <div className="banner" style={{ height: bannerH }}>
-          <img src={BANNER_URL} alt="" className="bannerImg" />
+          <img src={BANNER_URL} alt="" className="bannerImg" draggable={false} />
         </div>
 
         {/* Program */}
@@ -262,14 +272,14 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
           <select
             className={`select sunken ${program ? "" : "placeholder"}`}
             value={program}
-            onChange={(e) => setProgram(e.target.value)}
+            onChange={(e) => setProgram(e.target.value as TargetId | "")}
           >
             <option value="" disabled hidden>
               Select…
             </option>
-            <option value="Application 1">Application 1</option>
-            <option value="Application 2">Application 2</option>
-            <option value="Application 3">Application 3</option>
+            <option value="echo">Echo</option>
+            <option value="glitch">Glitch</option>
+            <option value="bloom">Bloom</option>
           </select>
         </div>
 
@@ -314,7 +324,7 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
           <div className="status">{patching ? `Patching… ${progress}%` : "Patch successful."}</div>
         )}
 
-        {/* Buttons — About (small) + Mute icon */}
+        {/* Buttons */}
         <div className="buttons">
           <button
             className="btn"
@@ -325,11 +335,34 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
           >
             Generate
           </button>
-          <button className="btn" onClick={() => { setProgress(0); setPatching(true); }}>
+
+          <button
+            className="btn"
+            onClick={() => {
+              if (!program) return;
+              setProgress(0);
+              setPatching(true);
+
+              const now = Date.now();
+              const key = (serialView || activation || makePlaceholder()) + "-SEQ";
+              const nameMap: Record<TargetId, string> = {
+                echo: "Echo",
+                glitch: "Glitch",
+                bloom: "Bloom",
+              };
+
+              pendingLicenseRef.current = {
+                key,
+                name: nameMap[program],
+                appId: program as AppId, // safe cast: your license AppId should include these ids
+                issuedAt: now,
+                expiresAt: now + LIFESPAN_MS,
+              };
+            }}
+          >
             Patch
           </button>
 
-          {/* Exit now calls parent; no reload */}
           <button
             className="btn"
             onClick={() => {
@@ -410,293 +443,55 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
 
       {/* Styles */}
       <style jsx>{`
-        .wrap {
-          min-height: 100svh;
-          background: #000;
-          display: grid;
-          place-items: center;
-          padding: 24px;
+        .wrap { min-height: 100svh; background: #000; display: grid; place-items: center; padding: 24px; }
+        .wrap.embed { min-height: 0; background: transparent; display: block; padding: 0; }
+        .panel { background: #0f0f0f; color: #e6e6e6; position: relative; box-shadow: 0 0 0 1px #222, 0 16px 64px rgba(0,0,0,0.7); padding: 14px; box-sizing: border-box; font: 11px Tahoma,"MS Sans Serif",Verdana,sans-serif; overflow: hidden; }
+        .dragHandle {
+          height: 10px;
+          margin: -14px -14px 8px; /* stretch to panel edges above the content */
+          background: linear-gradient(180deg, #1a1a1a, #0f0f0f);
+          border-bottom: 1px solid #000;
+          box-shadow: 0 1px 0 #333;
+          cursor: move;
         }
-        /* Embedded mode: remove fullscreen background & centering */
-        .wrap.embed {
-          min-height: 0;
-          background: transparent;
-          display: block;
-          padding: 0;
-        }
-
-        /* Panel (dark) */
-        .panel {
-          background: #0f0f0f;
-          color: #e6e6e6;
-          position: relative;
-          box-shadow: 0 0 0 1px #222, 0 16px 64px rgba(0, 0, 0, 0.7);
-          padding: 14px;
-          box-sizing: border-box;
-          font: 11px Tahoma, "MS Sans Serif", Verdana, sans-serif;
-          overflow: hidden;
-        }
-
-        /* Banner frame (dark bevel) */
-        .banner {
-          border: 1px solid #333;
-          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #666, 0 0 0 1px #000;
-          background: #000;
-          margin-bottom: 10px;
-          position: relative;
-        }
-        .banner::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background:
-            radial-gradient(60% 120% at 0% 50%, rgba(182, 103, 255, 0.1), transparent 60%),
-            radial-gradient(40% 100% at 100% 40%, rgba(91, 47, 176, 0.12), transparent 70%);
-        }
-        .bannerImg {
-          width: 100%;
-          height: 100%;
-          object-fit: fill;
-          object-position: left center;
-          display: block;
-        }
-
-        /* Field blocks */
-        .field {
-          margin-bottom: 10px;
-        }
-        .field label {
-          display: block;
-          margin-bottom: 4px;
-          color: #d8d8d8;
-        }
-
-        /* Inputs (dark) */
-        .input,
-        .select {
-          width: 100%;
-          height: 22px;
-          padding: 0 6px;
-          background: #111;
-          color: #eaeaea;
-          border: none;
-          outline: none;
-          font: 11px Tahoma, "MS Sans Serif";
-          caret-color: #eaeaea;
-        }
-        .input::placeholder {
-          color: #777;
-        }
-        .sunken {
-          border: 1px solid #3a3a3a;
-          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a;
-        }
-        .select.placeholder {
-          color: #7a7a7a;
-        }
-        .select:not(.placeholder) {
-          color: #eaeaea;
-        }
-        .select option[value=""] {
-          color: #7a7a7a;
-        }
-        .select option {
-          color: #eaeaea;
-          background: #111;
-        }
-
-        /* Activation row */
-        .activationRow {
-          display: grid;
-          grid-template-columns: 1fr auto;
-          gap: 8px;
-          align-items: center;
-        }
-        .serialBox {
-          height: 22px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0 6px;
-          background: #111;
-        }
-        .serial {
-          flex: 1;
-          font: 13px "Lucida Console", Consolas, monospace;
-          letter-spacing: 1px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          text-align: center;
-          color: #f0f0f0;
-        }
-        .copyBtn {
-          min-width: 120px;
-        }
-
-        /* Progress (dark) */
-        .progress {
-          height: 18px;
-          background: #1a1a1a;
-          margin-top: 8px;
-          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #5a5a5a;
-        }
-        .bar {
-          height: 100%;
-          background: linear-gradient(90deg, #5b2fb0, #b667ff);
-        }
-        .status {
-          margin-top: 4px;
-          color: #cfcfcf;
-        }
-
-        /* Buttons row — 3 main buttons + small About + icon mute */
-        .buttons {
-          display: grid;
-          grid-template-columns: 1fr 1fr 1fr auto auto;
-          align-items: center;
-          gap: 8px;
-          margin-top: 12px;
-        }
-        .btn {
-          height: 28px;
-          background: #1a1a1a;
-          color: #e6e6e6;
-          border: 1px solid #000;
-          box-shadow: inset 1px 1px 0 #6a6a6a, inset -1px -1px 0 #000, 0 0 0 1px #000;
-          font: 11px Tahoma, "MS Sans Serif";
-          cursor: pointer;
-          -webkit-appearance: none;
-          appearance: none;
-          border-radius: 0;
-        }
-        .btn:focus,
-        .btn:focus-visible {
-          outline: none;
-        }
-        :global(button::-moz-focus-inner) {
-          border: 0;
-        }
-        .btn:active {
-          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a, 0 0 0 1px #000;
-          transform: translateY(1px);
-        }
-        .btnSmall {
-          padding: 0 10px;
-          min-width: 64px;
-        }
-
-        /* Icon mute button */
-        .iconBtn {
-          height: 28px;
-          width: 32px;
-          background: #1a1a1a;
-          color: #e6e6e6;
-          border: 1px solid #000;
-          box-shadow: inset 1px 1px 0 #6a6a6a, inset -1px -1px 0 #000, 0 0 0 1px #000;
-          display: grid;
-          place-items: center;
-          cursor: pointer;
-          -webkit-appearance: none;
-          appearance: none;
-          border-radius: 0;
-          padding: 0;
-        }
-        .iconBtn:focus,
-        .iconBtn:focus-visible {
-          outline: none;
-        }
-        .iconBtn:active {
-          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a, 0 0 0 1px #000;
-          transform: translateY(1px);
-        }
-
-        /* Strapline */
-        .strap {
-          margin-top: 12px;
-          height: 32px;
-          display: grid;
-          place-items: center;
-          position: relative;
-          font: 11px Tahoma, "MS Sans Serif", Verdana, sans-serif;
-          color: #e6e6e6;
-          letter-spacing: 1px;
-          text-transform: uppercase;
-          text-shadow: 1px 1px 0 #000;
-          background: #1a1a1a;
-          border: 1px solid #000;
-          box-shadow: inset 1px 1px 0 #6a6a6a, inset -1px -1px 0 #000, 0 -1px 0 #333,
-            0 0 0 1px #333, 0 0 0 2px #000;
-        }
-
-        /* About modal (dark) */
-        .modalOverlay {
-          position: absolute;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.45);
-          display: grid;
-          place-items: center;
-        }
-        .modalWindow {
-          width: 420px;
-          background: #0f0f0f;
-          color: #e6e6e6;
-          box-shadow: 0 0 0 1px #333, 0 10px 40px rgba(0, 0, 0, 0.8);
-          border: 1px solid #444;
-        }
-        .titleBar {
-          background: #1a1aa6;
-          color: #fff;
-          padding: 4px 8px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-weight: bold;
-        }
-        .titleClose {
-          background: #1a1a1a;
-          color: #e6e6e6;
-          border: 1px solid #000;
-          width: 22px;
-          height: 18px;
-          line-height: 16px;
-          padding: 0;
-          cursor: pointer;
-          box-shadow: inset 1px 1px 0 #6a6a6a, inset -1px -1px 0 #000;
-          -webkit-appearance: none;
-          appearance: none;
-          border-radius: 0;
-        }
-        .titleClose:focus,
-        .titleClose:focus-visible {
-          outline: none;
-        }
-        .titleClose:active {
-          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a;
-        }
-        .modalBody {
-          padding: 10px;
-        }
-        .nfo {
-          margin: 0;
-          padding: 8px;
-          background: #0a0a0a;
-          color: #d7d7d7;
-          border: 1px solid #333;
-          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a;
-          font: 12px "Lucida Console", Consolas, monospace;
-          white-space: pre-wrap;
-        }
-        .modalButtons {
-          display: flex;
-          justify-content: flex-end;
-          gap: 8px;
-          margin-top: 10px;
-        }
-        .modalOk {
-          min-width: 120px;
-        }
+        .banner { border: 1px solid #333; box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #666, 0 0 0 1px #000; background: #000; margin-bottom: 10px; position: relative; }
+        .banner::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(60% 120% at 0% 50%, rgba(182,103,255,0.1), transparent 60%), radial-gradient(40% 100% at 100% 40%, rgba(91,47,176,0.12), transparent 70%); }
+        .bannerImg { width: 100%; height: 100%; object-fit: fill; object-position: left center; display: block; }
+        .field { margin-bottom: 10px; }
+        .field label { display: block; margin-bottom: 4px; color: #d8d8d8; }
+        .input, .select { width: 100%; height: 22px; padding: 0 6px; background: #111; color: #eaeaea; border: none; outline: none; font: 11px Tahoma,"MS Sans Serif"; caret-color: #eaeaea; }
+        .input::placeholder { color: #777; }
+        .sunken { border: 1px solid #3a3a3a; box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a; }
+        .select.placeholder { color: #7a7a7a; }
+        .select:not(.placeholder) { color: #eaeaea; }
+        .select option[value=""] { color: #7a7a7a; }
+        .select option { color: #eaeaea; background: #111; }
+        .activationRow { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+        .serialBox { height: 22px; display: flex; align-items: center; justify-content: center; padding: 0 6px; background: #111; }
+        .serial { flex: 1; font: 13px "Lucida Console",Consolas,monospace; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; color: #f0f0f0; }
+        .copyBtn { min-width: 120px; }
+        .progress { height: 18px; background: #1a1a1a; margin-top: 8px; box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #5a5a5a; }
+        .bar { height: 100%; background: linear-gradient(90deg, #5b2fb0, #b667ff); }
+        .status { margin-top: 4px; color: #cfcfcf; }
+        .buttons { display: grid; grid-template-columns: 1fr 1fr 1fr auto auto; align-items: center; gap: 8px; margin-top: 12px; }
+        .btn { height: 28px; background: #1a1a1a; color: #e6e6e6; border: 1px solid #000; box-shadow: inset 1px 1px 0 #6a6a6a, inset -1px -1px 0 #000, 0 0 0 1px #000; font: 11px Tahoma,"MS Sans Serif"; cursor: pointer; appearance: none; border-radius: 0; }
+        .btn:focus, .btn:focus-visible { outline: none; }
+        .btn:active { box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a, 0 0 0 1px #000; transform: translateY(1px); }
+        .btnSmall { padding: 0 10px; min-width: 64px; }
+        .iconBtn { height: 28px; width: 32px; background: #1a1a1a; color: #e6e6e6; border: 1px solid #000; box-shadow: inset 1px 1px 0 #6a6a6a, inset -1px -1px 0 #000, 0 0 0 1px #000; display: grid; place-items: center; cursor: pointer; appearance: none; border-radius: 0; padding: 0; }
+        .iconBtn:focus, .iconBtn:focus-visible { outline: none; }
+        .iconBtn:active { box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a, 0 0 0 1px #000; transform: translateY(1px); }
+        .strap { margin-top: 12px; height: 32px; display: grid; place-items: center; position: relative; font: 11px Tahoma,"MS Sans Serif",Verdana,sans-serif; color: #e6e6e6; letter-spacing: 1px; text-transform: uppercase; text-shadow: 1px 1px 0 #000; background: #1a1a1a; border: 1px solid #000; box-shadow: inset 1px 1px 0 #6a6a6a, inset -1px -1px 0 #000, 0 -1px 0 #333, 0 0 0 1px #333, 0 0 0 2px #000; }
+        .modalOverlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: grid; place-items: center; }
+        .modalWindow { width: 420px; background: #0f0f0f; color: #e6e6e6; box-shadow: 0 0 0 1px #333, 0 10px 40px rgba(0,0,0,0.8); border: 1px solid #444; }
+        .titleBar { background: #1a1aa6; color: #fff; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .titleClose { background: #1a1a1a; color: #e6e6e6; border: 1px solid #000; width: 22px; height: 18px; line-height: 16px; padding: 0; cursor: pointer; box-shadow: inset 1px 1px 0 #6a6a6a, inset -1px -1px 0 #000; appearance: none; border-radius: 0; }
+        .titleClose:focus, .titleClose:focus-visible { outline: none; }
+        .titleClose:active { box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a; }
+        .modalBody { padding: 10px; }
+        .nfo { margin: 0; padding: 8px; background: #0a0a0a; color: #d7d7d7; border: 1px solid #333; box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a; font: 12px "Lucida Console",Consolas,monospace; white-space: pre-wrap; }
+        .modalButtons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+        .modalOk { min-width: 120px; }
       `}</style>
     </div>
   );
