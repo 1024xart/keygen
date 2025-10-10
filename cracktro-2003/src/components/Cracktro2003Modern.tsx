@@ -1,4 +1,4 @@
-// KeygenWin98Panel.tsx — dark early-Windows keygen + music (TS-safe, silent autoplay)
+// Cracktro2003Modern.tsx — dark early-Windows keygen + music (TS-safe, silent autoplay)
 "use client";
 /* eslint-disable @next/next/no-img-element */
 
@@ -15,13 +15,19 @@ const VERSION = "v0.2.0";
 const MUSIC_TARGET_VOL = 0.45; // 0..1
 const LIFESPAN_MS = 7 * 24 * 60 * 60 * 1000;
 
-// Keygen targets (local/narrow list)
-const APP_IDS = ["echo", "glitch", "bloom"] as const;
-type TargetId = typeof APP_IDS[number];
+// Keygen targets (permanent IDs) — explicit order: TR01, BMR08, BR09
+const APP_IDS = ["TR01", "BMR08", "BR09"] as const;
+type TargetId = typeof APP_IDS[number]; // aligns with AppId variants you use
 
-// NEW: alphabetically sorted options + labels
-const APP_LIST: TargetId[] = [...APP_IDS].sort((a, b) => a.localeCompare(b));
-const labelFor = (id: TargetId) => id.charAt(0).toUpperCase() + id.slice(1);
+// Visible labels for the dropdown (identity, but keeps it flexible)
+const DISPLAY_LABELS: Record<TargetId, string> = {
+  TR01: "TR01",
+  BMR08: "BMR08",
+  BR09: "BR09",
+};
+
+// Keep the order exactly as APP_IDS — do NOT sort
+const APP_LIST: TargetId[] = [...APP_IDS];
 
 type Props = {
   openTrigger?: number;
@@ -53,7 +59,7 @@ function makePlaceholder() {
   return `${g()}-${g()}-${g()}`;
 }
 
-export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Props) {
+export default function Cracktro2003Modern({ openTrigger, embedded, onExit }: Props) {
   const PANEL_WIDTH = 820;
 
   // Inputs
@@ -284,7 +290,7 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
             </option>
             {APP_LIST.map((id) => (
               <option key={id} value={id}>
-                {labelFor(id)}
+                {DISPLAY_LABELS[id]}
               </option>
             ))}
           </select>
@@ -355,18 +361,13 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
 
               const now = Date.now();
               const key = (serialView || activation || makePlaceholder()) + "-SEQ";
-              const nameMap: Record<TargetId, string> = {
-                echo: "Echo",
-                glitch: "Glitch",
-                bloom: "Bloom",
-              };
 
               pendingLicenseRef.current = {
                 key,
-                name: nameMap[program],
-                appId: program as AppId,
+                name: DISPLAY_LABELS[program],
+                appId: program as AppId, // exact match now that IDs are uppercase
                 issuedAt: now,
-                expiresAt: now + LIFESPAN_MS,
+                expiresAt: now + LIFESPAN_MS, // signals “patched” to the app
               };
             }}
           >
@@ -458,7 +459,7 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
         .panel { background: #0f0f0f; color: #e6e6e6; position: relative; box-shadow: 0 0 0 1px #222, 0 16px 64px rgba(0,0,0,0.7); padding: 14px; box-sizing: border-box; font: 11px Tahoma,"MS Sans Serif",Verdana,sans-serif; overflow: hidden; }
         .dragHandle {
           height: 10px;
-          margin: -14px -14px 8px; /* stretch to panel edges above the content */
+          margin: -14px -14px 8px;
           background: linear-gradient(180deg, #1a1a1a, #0f0f0f);
           border-bottom: 1px solid #000;
           box-shadow: 0 1px 0 #333;

@@ -4,8 +4,8 @@ import React, { useMemo, useState } from "react";
 import { setLicense, useLicense, type AppId } from "@/system/license";
 
 type Props = {
-  appId: AppId;          // "echo" | "glitch" | "bloom"
-  name: string;          // UI label
+  appId: AppId;          // "BMR08" | "BR09" | "TR01"
+  name: string;          // UI label shown in title bar
   onClose?: () => void;  // optional close handler for DesktopShell
 };
 
@@ -53,11 +53,10 @@ function makePerAppRequest(appId: AppId) {
 }
 
 // Patch-revealed art per app (put your gifs in /public/media/demo/)
-// NOTE: Partial so we don't have to list every AppId (e.g., "sequence")
 const ART_MAP: Partial<Record<AppId, string>> = {
-  echo:   "/media/demo/art8.gif",
-  glitch: "/media/demo/art9.gif",
-  bloom:  "/media/demo/art1.gif",
+  BMR08: "/media/demo/art8.gif",
+  BR09:  "/media/demo/art9.gif",
+  TR01:  "/media/demo/art1.gif",
 };
 
 export default function DemoApp({ appId, name, onClose }: Props) {
@@ -278,7 +277,7 @@ export default function DemoApp({ appId, name, onClose }: Props) {
           top: 50%;
           height: 1px;
           background: linear-gradient(90deg, transparent, #b667ff, transparent);
-          animation: scan 2.2s linear infinite.
+          animation: scan 2.2s linear infinite;
         }
         @keyframes float {
           0% { transform: translate(0, 0); }

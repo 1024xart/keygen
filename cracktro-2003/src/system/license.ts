@@ -3,7 +3,7 @@
 import { useMemo, useSyncExternalStore } from "react";
 
 /** Add your art apps here as you create them. */
-export type AppId = "sequence" | "echo" | "glitch" | "bloom";
+export type AppId = "sequence" | "TR01" | "BMR08" | "BR09";
 
 export type License = {
   key: string;
@@ -17,15 +17,15 @@ type Store = {
   byApp: Record<AppId, License | null>;
 };
 
-const STORAGE_KEY = "seq_licenses_v1";
+const STORAGE_KEY = "seq_licenses_v2";
 
 // ---- internal state --------------------------------------------------------
 let state: Store = {
   byApp: {
     sequence: null,
-    echo: null,
-    glitch: null,
-    bloom: null,
+    TR01: null,
+    BMR08: null,
+    BR09: null,
   },
 };
 
@@ -65,9 +65,9 @@ function load() {
       state = {
         byApp: {
           sequence: parsed.byApp.sequence ?? null,
-          echo: parsed.byApp.echo ?? null,
-          glitch: parsed.byApp.glitch ?? null,
-          bloom: parsed.byApp.bloom ?? null,
+          TR01: parsed.byApp.TR01 ?? null,
+          BMR08: parsed.byApp.BMR08 ?? null,
+          BR09: parsed.byApp.BR09 ?? null,
         },
       };
     }
@@ -116,8 +116,7 @@ export function useLicense(appId: AppId) {
   const s = useSyncExternalStore(subscribe, getSnap, getSnap);
   const lic = s.byApp[appId];
 
-  const expired =
-    !!(lic && lic.expiresAt && Date.now() > lic.expiresAt);
+  const expired = !!(lic && lic.expiresAt && Date.now() > lic.expiresAt);
 
   const remainingMs = lic?.expiresAt
     ? Math.max(0, lic.expiresAt - Date.now())

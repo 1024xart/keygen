@@ -11,9 +11,11 @@ import Window from "@/desktop/ui/Window";
 
 import Thoughts from "@/desktop/apps/Thoughts";
 import Studio from "@/desktop/apps/Studio";
-import Echo from "@/desktop/apps/demo/Echo";
-import Glitch from "@/desktop/apps/demo/Glitch";
-import Bloom from "@/desktop/apps/demo/Bloom";
+
+// NEW: renamed demo apps (make sure the file names match exactly)
+import BMR08 from "@/desktop/apps/demo/BMR08";
+import BR09 from "@/desktop/apps/demo/BR09";
+import TR01 from "@/desktop/apps/demo/TR01";
 
 type PreviewWin = { file: FileEntry; sig: number };
 
@@ -32,18 +34,22 @@ export default function DesktopShell() {
   // Apps
   const [thoughtsOpen, setThoughtsOpen] = useState(false);
   const [studioOpen, setStudioOpen] = useState(false);
-  const [echoOpen, setEchoOpen] = useState(false);
-  const [glitchOpen, setGlitchOpen] = useState(false);
-  const [bloomOpen, setBloomOpen] = useState(false);
+
+  // Demo apps (renamed)
+  const [bmr08Open, setBmr08Open] = useState(false);
+  const [br09Open, setBr09Open] = useState(false);
+  const [tr01Open, setTr01Open] = useState(false);
 
   // z-raise signals for regular windows
   const [sigKeygen, setSigKeygen] = useState(0);
   const [sigBin, setSigBin] = useState(0);
   const [sigThoughts, setSigThoughts] = useState(0);
   const [sigStudio, setSigStudio] = useState(0);
-  const [sigEcho, setSigEcho] = useState(0);
-  const [sigGlitch, setSigGlitch] = useState(0);
-  const [sigBloom, setSigBloom] = useState(0);
+
+  // z-raise signals for demo apps
+  const [sigBMR08, setSigBMR08] = useState(0);
+  const [sigBR09, setSigBR09] = useState(0);
+  const [sigTR01, setSigTR01] = useState(0);
 
   // -------- Aesthetic marquee only --------
   const desktopRef = useRef<HTMLDivElement | null>(null);
@@ -133,16 +139,16 @@ export default function DesktopShell() {
       if (previews.length > 0) {
         closePreview(previews[previews.length - 1].file.id);
       } else if (binOpen) setBinOpen(false);
-      else if (bloomOpen) setBloomOpen(false);
-      else if (glitchOpen) setGlitchOpen(false);
-      else if (echoOpen) setEchoOpen(false);
+      else if (tr01Open) setTr01Open(false);
+      else if (br09Open) setBr09Open(false);
+      else if (bmr08Open) setBmr08Open(false);
       else if (studioOpen) setStudioOpen(false);
       else if (thoughtsOpen) setThoughtsOpen(false);
       else if (open) setOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [previews, binOpen, bloomOpen, glitchOpen, echoOpen, studioOpen, thoughtsOpen, open]);
+  }, [previews, binOpen, tr01Open, br09Open, bmr08Open, studioOpen, thoughtsOpen, open]);
 
   // Build taskbar tasks from open windows + previews
   const tasks = [
@@ -157,9 +163,13 @@ export default function DesktopShell() {
     binOpen && { id: "bin", label: "Recycle Bin", onActivate: () => setSigBin((n) => n + 1) },
     thoughtsOpen && { id: "thoughts", label: "THOUGHTS", onActivate: () => setSigThoughts((n) => n + 1) },
     studioOpen && { id: "studio", label: "STUDIO", onActivate: () => setSigStudio((n) => n + 1) },
-    echoOpen && { id: "echo", label: "Echo", onActivate: () => setSigEcho((n) => n + 1) },
-    glitchOpen && { id: "glitch", label: "Glitch", onActivate: () => setSigGlitch((n) => n + 1) },
-    bloomOpen && { id: "bloom", label: "Bloom", onActivate: () => setSigBloom((n) => n + 1) },
+
+    // renamed demo apps
+    bmr08Open && { id: "BMR08", label: "BMR08", onActivate: () => setSigBMR08((n) => n + 1) },
+    br09Open  && { id: "BR09",  label: "BR09",  onActivate: () => setSigBR09((n) => n + 1) },
+    tr01Open  && { id: "TR01",  label: "TR01",  onActivate: () => setSigTR01((n) => n + 1) },
+
+    // one task per open preview
     ...previews.map((p) => ({
       id: `preview:${p.file.id}`,
       label: p.file.name,
@@ -243,25 +253,25 @@ export default function DesktopShell() {
         </Window>
       )}
 
-      {/* Demo apps */}
-      {echoOpen && (
-        <Window chrome="external" handleSelector=".titleBar" title="Echo" activateSignal={sigEcho}>
+      {/* Demo apps (renamed) */}
+      {bmr08Open && (
+        <Window chrome="external" handleSelector=".titleBar" title="BMR08" activateSignal={sigBMR08}>
           <div>
-            <Echo onClose={() => setEchoOpen(false)} />
+            <BMR08 onClose={() => setBmr08Open(false)} />
           </div>
         </Window>
       )}
-      {glitchOpen && (
-        <Window chrome="external" handleSelector=".titleBar" title="Glitch" activateSignal={sigGlitch}>
+      {br09Open && (
+        <Window chrome="external" handleSelector=".titleBar" title="BR09" activateSignal={sigBR09}>
           <div>
-            <Glitch onClose={() => setGlitchOpen(false)} />
+            <BR09 onClose={() => setBr09Open(false)} />
           </div>
         </Window>
       )}
-      {bloomOpen && (
-        <Window chrome="external" handleSelector=".titleBar" title="Bloom" activateSignal={sigBloom}>
+      {tr01Open && (
+        <Window chrome="external" handleSelector=".titleBar" title="TR01" activateSignal={sigTR01}>
           <div>
-            <Bloom onClose={() => setBloomOpen(false)} />
+            <TR01 onClose={() => setTr01Open(false)} />
           </div>
         </Window>
       )}
@@ -271,9 +281,10 @@ export default function DesktopShell() {
         onToggleStart={() => setStartOpen((v) => !v)}
         onLaunchThoughts={() => setThoughtsOpen(true)}
         onLaunchStudio={() => setStudioOpen(true)}
-        onLaunchEcho={() => setEchoOpen(true)}
-        onLaunchGlitch={() => setGlitchOpen(true)}
-        onLaunchBloom={() => setBloomOpen(true)}
+        // NEW: renamed launchers
+        onLaunchBMR08={() => setBmr08Open(true)}
+        onLaunchBR09={() => setBr09Open(true)}
+        onLaunchTR01={() => setTr01Open(true)}
         tasks={tasks}
       />
 

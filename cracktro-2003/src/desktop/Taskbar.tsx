@@ -13,14 +13,16 @@ type Props = {
   startOpen: boolean;
   onToggleStart: () => void;
 
-  // start menu launchers (existing)
+  // Start menu launchers
   onLaunchThoughts?: () => void;
   onLaunchStudio?: () => void;
-  onLaunchEcho?: () => void;
-  onLaunchGlitch?: () => void;
-  onLaunchBloom?: () => void;
 
-  // NEW: open windows to show as taskbar tabs
+  // New app names (no legacy support)
+  onLaunchTR01?: () => void;
+  onLaunchBMR08?: () => void;
+  onLaunchBR09?: () => void;
+
+  // Open windows to show as taskbar tabs
   tasks?: Task[];
 };
 
@@ -29,9 +31,9 @@ export default function Taskbar({
   onToggleStart,
   onLaunchThoughts,
   onLaunchStudio,
-  onLaunchEcho,
-  onLaunchGlitch,
-  onLaunchBloom,
+  onLaunchTR01,
+  onLaunchBMR08,
+  onLaunchBR09,
   tasks = [],
 }: Props) {
   const onMenuKey = (e: React.KeyboardEvent, fn?: () => void) => {
@@ -56,7 +58,7 @@ export default function Taskbar({
           START
         </button>
 
-        {/* NEW: task buttons */}
+        {/* task buttons */}
         <div className="tasks">
           {tasks.map((t) => (
             <button
@@ -110,33 +112,33 @@ export default function Taskbar({
             Studio
           </div>
 
-          <div className="sectionTitle">Demo</div>
+          <div className="sectionTitle">WATCHER</div>
           <div
             className="menuItem"
             role="menuitem"
             tabIndex={0}
-            onClick={() => { onLaunchEcho?.(); onToggleStart(); }}
-            onKeyDown={(e) => onMenuKey(e, onLaunchEcho)}
+            onClick={() => { onLaunchTR01?.(); onToggleStart(); }}
+            onKeyDown={(e) => onMenuKey(e, onLaunchTR01)}
           >
-            Echo
+            TR01
           </div>
           <div
             className="menuItem"
             role="menuitem"
             tabIndex={0}
-            onClick={() => { onLaunchGlitch?.(); onToggleStart(); }}
-            onKeyDown={(e) => onMenuKey(e, onLaunchGlitch)}
+            onClick={() => { onLaunchBMR08?.(); onToggleStart(); }}
+            onKeyDown={(e) => onMenuKey(e, onLaunchBMR08)}
           >
-            Glitch
+            BMR08
           </div>
           <div
             className="menuItem"
             role="menuitem"
             tabIndex={0}
-            onClick={() => { onLaunchBloom?.(); onToggleStart(); }}
-            onKeyDown={(e) => onMenuKey(e, onLaunchBloom)}
+            onClick={() => { onLaunchBR09?.(); onToggleStart(); }}
+            onKeyDown={(e) => onMenuKey(e, onLaunchBR09)}
           >
-            Bloom
+            BR09
           </div>
         </div>
       )}
@@ -178,7 +180,6 @@ export default function Taskbar({
           transform: translateY(1px);
         }
 
-        /* NEW task buttons strip */
         .tasks {
           display: flex;
           gap: 6px;
@@ -205,7 +206,6 @@ export default function Taskbar({
         .spacer { min-width: 8px; }
         .tray { padding: 0 8px; color: #d0d0d0; text-shadow: 1px 1px 0 #000; }
 
-        /* start menu styles (unchanged below) */
         .startmenu {
           position: fixed;
           left: 6px;
@@ -219,15 +219,38 @@ export default function Taskbar({
             inset 1px 1px 0 #6a6a6a, inset -1px -1px 0 #000;
           padding: 8px;
         }
-        .userTile { display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: center; padding: 6px; border: 1px solid #333;
-          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a; background: #111; }
-        .avatar { width: 28px; height: 28px; background: linear-gradient(135deg, #5b2fb0, #b667ff); box-shadow: inset 1px 1px 0 #6a6a6a, inset -1px -1px 0 #000; }
+        .userTile {
+          display: grid;
+          grid-template-columns: 28px 1fr;
+          gap: 8px;
+          align-items: center;
+          padding: 6px;
+          border: 1px solid #333;
+          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a;
+          background: #111;
+        }
+        .avatar {
+          width: 28px;
+          height: 28px;
+          background: linear-gradient(135deg, #5b2fb0, #b667ff);
+          box-shadow: inset 1px 1px 0 #6a6a6a, inset -1px -1px 0 #000;
+        }
         .meta .hello { color: #9a9a9a; font-size: 10px; margin-bottom: 2px; }
         .meta .name { font-weight: 700; letter-spacing: 0.3px; }
         .sectionTitle { margin: 10px 2px 6px; font-weight: 700; color: #cfcfcf; letter-spacing: 0.3px; }
-        .menuItem { margin: 6px 0; padding: 6px 8px; background: #111; border: 1px solid #333;
-          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a; cursor: default; user-select: none; }
-        .menuItem:active { box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a; transform: translateY(1px); }
+        .menuItem {
+          margin: 6px 0;
+          padding: 6px 8px;
+          background: #111;
+          border: 1px solid #333;
+          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a;
+          cursor: default;
+          user-select: none;
+        }
+        .menuItem:active {
+          box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a;
+          transform: translateY(1px);
+        }
       `}</style>
     </>
   );
