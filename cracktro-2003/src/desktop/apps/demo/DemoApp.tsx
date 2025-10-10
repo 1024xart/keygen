@@ -39,6 +39,19 @@ function getMachineId() {
   return v;
 }
 
+/** Make a per-app Request so each app shows a different code. */
+function makePerAppRequest(appId: AppId) {
+  const mid = getMachineId();
+  const base = `${mid}::${appId.toUpperCase()}`;
+  // different salts than activation
+  const h1 = hash32(base, 0x77A);
+  const h2 = hash32(`${base}::2`, 0x9D3);
+  const a = (h1 & 0xffff).toString(16).padStart(4, "0");
+  const b = ((h1 >>> 16) & 0xffff).toString(16).padStart(4, "0");
+  const c = Math.abs(h2).toString(36).slice(0, 4).toUpperCase();
+  return `${a}-${b}-${c}`.toUpperCase();
+}
+
 // Patch-revealed art per app (put your gifs in /public/media/demo/)
 // NOTE: Partial so we don't have to list every AppId (e.g., "sequence")
 const ART_MAP: Partial<Record<AppId, string>> = {
@@ -50,11 +63,13 @@ const ART_MAP: Partial<Record<AppId, string>> = {
 export default function DemoApp({ appId, name, onClose }: Props) {
   const { license } = useLicense(appId);
   const [code, setCode] = useState("");
-  const req = useMemo(getMachineId, []);
+
+  // DIFFERING REQUEST CODES (per app)
+  const req = useMemo(() => makePerAppRequest(appId), [appId]);
   const expected = makeSerial(appId, req);
 
-  const unlocked = !!license;                // has any license
-  const patched  = !!license?.expiresAt;     // keygen Patch sets this
+  const unlocked = !!license;            // has any license
+  const patched  = !!license?.expiresAt; // keygen Patch sets this
 
   return (
     <div className="win" role="dialog" aria-label={name}>
@@ -68,7 +83,7 @@ export default function DemoApp({ appId, name, onClose }: Props) {
       </div>
 
       <div className="body">
-        {/* STAGE 1 — TRIAL (unchanged) */}
+        {/* STAGE 1 — TRIAL */}
         {!unlocked && (
           <div className="trial">
             <div className="title">{name} — Trial</div>
@@ -120,12 +135,12 @@ export default function DemoApp({ appId, name, onClose }: Props) {
           </div>
         )}
 
-        {/* STAGE 2 — ACTIVATED (NOT PATCHED): keep your existing “canvas” animation */}
+        {/* STAGE 2 — ACTIVATED (NOT PATCHED) */}
         {unlocked && !patched && (
           <div className="full">
             <div className="badge">FULL VERSION</div>
 
-            {/* your original animated canvas */}
+            {/* original animated canvas */}
             <div className="canvas">
               <div className="orb" />
               <div className="line" />
@@ -142,7 +157,11 @@ export default function DemoApp({ appId, name, onClose }: Props) {
         {unlocked && patched && (
           <div className="full">
             <div className="badge">UPDATED</div>
-            <img className="artMedia" src={ART_MAP[appId]} alt={`${name} artwork`} />
+            {ART_MAP[appId] ? (
+              <img className="artMedia" src={ART_MAP[appId]} alt={`${name} artwork`} />
+            ) : (
+              <div className="content">No artwork configured for this app.</div>
+            )}
           </div>
         )}
       </div>
@@ -185,7 +204,6 @@ export default function DemoApp({ appId, name, onClose }: Props) {
         .titleClose:active { box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a; }
 
         .body { padding: 10px; }
-
         .title { font-weight: 700; margin-bottom: 8px; }
 
         .row {
@@ -260,7 +278,7 @@ export default function DemoApp({ appId, name, onClose }: Props) {
           top: 50%;
           height: 1px;
           background: linear-gradient(90deg, transparent, #b667ff, transparent);
-          animation: scan 2.2s linear infinite;
+          animation: scan 2.2s linear infinite.
         }
         @keyframes float {
           0% { transform: translate(0, 0); }
@@ -272,10 +290,7 @@ export default function DemoApp({ appId, name, onClose }: Props) {
           100% { transform: translateX(100%); }
         }
 
-        .updateNotice {
-          color: #dcdcdc;
-        }
-
+        .updateNotice { color: #dcdcdc; }
         .artMedia {
           max-width: 100%;
           height: auto;

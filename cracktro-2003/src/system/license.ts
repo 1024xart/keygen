@@ -31,8 +31,21 @@ let state: Store = {
 
 const listeners = new Set<() => void>();
 
-function emit() {
-  listeners.forEach((l) => l());
+/** Defer emits to a microtask so we never update during another component’s render. */
+let emitScheduled = false;
+function emitSoon() {
+  if (emitScheduled) return;
+  emitScheduled = true;
+  const schedule =
+    typeof queueMicrotask === "function"
+      ? queueMicrotask
+      : (fn: () => void) => Promise.resolve().then(fn);
+
+  schedule(() => {
+    emitScheduled = false;
+    // Notify all subscribers after the current render flush.
+    listeners.forEach((l) => l());
+  });
 }
 
 function save() {
@@ -67,7 +80,7 @@ if (typeof window !== "undefined") {
   window.addEventListener("storage", (e) => {
     if (e.key === STORAGE_KEY) {
       load();
-      emit();
+      emitSoon();
     }
   });
 }
@@ -78,7 +91,7 @@ export function setLicense(lic: License) {
     byApp: { ...state.byApp, [lic.appId]: lic },
   };
   save();
-  emit();
+  emitSoon();
 }
 
 export function clearLicense(appId: AppId) {
@@ -86,7 +99,7 @@ export function clearLicense(appId: AppId) {
     byApp: { ...state.byApp, [appId]: null },
   };
   save();
-  emit();
+  emitSoon();
 }
 
 export function getLicense(appId: AppId): License | null {
