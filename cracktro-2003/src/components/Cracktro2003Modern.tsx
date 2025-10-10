@@ -19,6 +19,10 @@ const LIFESPAN_MS = 7 * 24 * 60 * 60 * 1000;
 const APP_IDS = ["echo", "glitch", "bloom"] as const;
 type TargetId = typeof APP_IDS[number];
 
+// NEW: alphabetically sorted options + labels
+const APP_LIST: TargetId[] = [...APP_IDS].sort((a, b) => a.localeCompare(b));
+const labelFor = (id: TargetId) => id.charAt(0).toUpperCase() + id.slice(1);
+
 type Props = {
   openTrigger?: number;
   embedded?: boolean;
@@ -278,18 +282,20 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
             <option value="" disabled hidden>
               Select…
             </option>
-            <option value="echo">Echo</option>
-            <option value="glitch">Glitch</option>
-            <option value="bloom">Bloom</option>
+            {APP_LIST.map((id) => (
+              <option key={id} value={id}>
+                {labelFor(id)}
+              </option>
+            ))}
           </select>
         </div>
 
-        {/* Request (optional) */}
+        {/* Request */}
         <div className="field">
-          <label>Request (optional) :</label>
+          <label>Request :</label>
           <input
             className="input sunken"
-            placeholder="Paste Request here (optional)"
+            placeholder="Paste Request here"
             value={request}
             onChange={(e) => setRequest(e.target.value)}
           />
@@ -358,7 +364,7 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
               pendingLicenseRef.current = {
                 key,
                 name: nameMap[program],
-                appId: program as AppId, // safe cast: your license AppId should include these ids
+                appId: program as AppId,
                 issuedAt: now,
                 expiresAt: now + LIFESPAN_MS,
               };
