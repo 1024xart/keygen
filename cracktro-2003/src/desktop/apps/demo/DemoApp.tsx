@@ -39,13 +39,22 @@ function getMachineId() {
   return v;
 }
 
+// Patch-revealed art per app (put your gifs in /public/media/demo/)
+// NOTE: Partial so we don't have to list every AppId (e.g., "sequence")
+const ART_MAP: Partial<Record<AppId, string>> = {
+  echo:   "/media/demo/art2.gif",
+  glitch: "/media/demo/art3.gif",
+  bloom:  "/media/demo/art1.gif",
+};
+
 export default function DemoApp({ appId, name, onClose }: Props) {
   const { license } = useLicense(appId);
   const [code, setCode] = useState("");
   const req = useMemo(getMachineId, []);
-  const unlocked = !!license;
-
   const expected = makeSerial(appId, req);
+
+  const unlocked = !!license;                // has any license
+  const patched  = !!license?.expiresAt;     // keygen Patch sets this
 
   return (
     <div className="win" role="dialog" aria-label={name}>
@@ -59,7 +68,8 @@ export default function DemoApp({ appId, name, onClose }: Props) {
       </div>
 
       <div className="body">
-        {!unlocked ? (
+        {/* STAGE 1 — TRIAL (unchanged) */}
+        {!unlocked && (
           <div className="trial">
             <div className="title">{name} — Trial</div>
 
@@ -87,6 +97,7 @@ export default function DemoApp({ appId, name, onClose }: Props) {
                 className="btn btnWide"
                 onClick={() => {
                   if (code.trim().toUpperCase() === expected) {
+                    // IMPORTANT: do NOT set expiresAt here.
                     setLicense({
                       key: code.trim().toUpperCase(),
                       name,
@@ -107,14 +118,31 @@ export default function DemoApp({ appId, name, onClose }: Props) {
               paste the code here.
             </div>
           </div>
-        ) : (
+        )}
+
+        {/* STAGE 2 — ACTIVATED (NOT PATCHED): keep your existing “canvas” animation */}
+        {unlocked && !patched && (
           <div className="full">
             <div className="badge">FULL VERSION</div>
-            {/* tiny “art” vibe stub so you see a visible change */}
+
+            {/* your original animated canvas */}
             <div className="canvas">
               <div className="orb" />
               <div className="line" />
             </div>
+
+            <div className="updateNotice">
+              Update available. Open <b>SEQUENCE.exe</b> and press <b>Patch</b> for <b>{name}</b> to
+              install the latest software update.
+            </div>
+          </div>
+        )}
+
+        {/* STAGE 3 — PATCHED: reveal GIF art */}
+        {unlocked && patched && (
+          <div className="full">
+            <div className="badge">UPDATED</div>
+            <img className="artMedia" src={ART_MAP[appId]} alt={`${name} artwork`} />
           </div>
         )}
       </div>
@@ -158,10 +186,8 @@ export default function DemoApp({ appId, name, onClose }: Props) {
 
         .body { padding: 10px; }
 
-        /* Trial/full content */
         .title { font-weight: 700; margin-bottom: 8px; }
 
-        /* widen the last column so buttons fit comfortably */
         .row {
           display: grid;
           grid-template-columns: 100px 1fr 110px;
@@ -169,7 +195,6 @@ export default function DemoApp({ appId, name, onClose }: Props) {
           align-items: center;
           margin: 8px 0;
         }
-
         .req {
           font: 12px "Lucida Console", Consolas, monospace;
           padding: 6px 8px;
@@ -191,11 +216,10 @@ export default function DemoApp({ appId, name, onClose }: Props) {
           border: 1px solid #000;
           box-shadow: inset 1px 1px 0 #6a6a6a, inset -1px -1px 0 #000, 0 0 0 1px #000;
           cursor: pointer;
-          padding: 0 12px;            /* a touch more horizontal space */
-          white-space: nowrap;        /* prevent label wrapping */
+          padding: 0 12px;
+          white-space: nowrap;
         }
-        .btnWide { min-width: 96px; }  /* guarantees “Activate” fits */
-
+        .btnWide { min-width: 96px; }
         .btn:active {
           box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a, 0 0 0 1px #000;
           transform: translateY(1px);
@@ -248,7 +272,18 @@ export default function DemoApp({ appId, name, onClose }: Props) {
           100% { transform: translateX(100%); }
         }
 
-        /* small screens: stack nicely */
+        .updateNotice {
+          color: #dcdcdc;
+        }
+
+        .artMedia {
+          max-width: 100%;
+          height: auto;
+          border: 1px solid #333;
+          box-shadow: inset 0 0 24px rgba(182, 103, 255, 0.2);
+          background: #080808;
+        }
+
         @media (max-width: 560px) {
           .row { grid-template-columns: 1fr; }
           .row .btn { justify-self: start; }

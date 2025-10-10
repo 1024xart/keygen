@@ -4,7 +4,6 @@
 
 import React, {
   useEffect,
-  useMemo,
   useRef,
   useState,
   useCallback,
@@ -56,10 +55,9 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
   // Inputs
   const [program, setProgram] = useState<TargetId | "">("");
   const [request, setRequest] = useState("");
-  const activation = useMemo(
-    () => (request ? makeSerial(program || undefined, request) : ""),
-    [program, request]
-  );
+
+  // EXPLICIT activation (no auto-generate). Empty until user clicks "Generate".
+  const [activation, setActivation] = useState("");
 
   // Copy + serial flicker
   const [copied, setCopied] = useState(false);
@@ -81,9 +79,12 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
       }
     }, 45);
   }
+
+  // When inputs change, invalidate any previously generated code and clear the flicker view
   useEffect(() => {
     setSerialView("");
-  }, [activation]);
+    setActivation("");
+  }, [program, request]);
 
   // Progress
   const [patching, setPatching] = useState(false);
@@ -329,8 +330,11 @@ export default function KeygenWin98Panel({ openTrigger, embedded, onExit }: Prop
           <button
             className="btn"
             onClick={() => {
-              const target = request ? activation : makePlaceholder();
-              flicker(target);
+              const target = request
+                ? makeSerial(program || undefined, request)
+                : makePlaceholder();
+              setActivation(target); // store generated value
+              flicker(target);       // animated reveal
             }}
           >
             Generate
