@@ -59,15 +59,18 @@ export default function DesktopShell() {
     return { x, y, w, h };
   };
 
+  // Treat these surfaces as “UI chrome” (no marquee, don’t close Start)
+  const isInUIChrome = (el: HTMLElement | null) =>
+    !!el?.closest(".winRoot, .iconItem, .taskbar, .startMenu, [data-taskbar], [data-startmenu]");
+
   const onDesktopMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
     if (e.button !== 0) return;
     const target = e.target as HTMLElement;
 
-    // Only start marquee on empty desktop (don’t block icons or windows)
-    if (target.closest(".winRoot") || target.closest(".iconItem")) return;
+    // Only start marquee on empty desktop
+    if (isInUIChrome(target)) return;
 
     (document.activeElement as HTMLElement | null)?.blur?.();
-    if (startOpen) setStartOpen(false);
 
     const bounds = desktopRef.current!.getBoundingClientRect();
     const start = { x: e.clientX - bounds.left, y: e.clientY - bounds.top };
@@ -88,6 +91,13 @@ export default function DesktopShell() {
     setDragging(false);
     setDragStart(null);
     setDragRect(null);
+  };
+
+  // Close Start ONLY when clicking on empty desktop (not on UI chrome)
+  const onDesktopClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    if (!startOpen) return;
+    const target = e.target as HTMLElement;
+    if (!isInUIChrome(target)) setStartOpen(false);
   };
 
   // Helpers for previews
@@ -164,10 +174,9 @@ export default function DesktopShell() {
       onMouseDown={onDesktopMouseDown}
       onMouseMove={onDesktopMouseMove}
       onMouseUp={onDesktopMouseUp}
-      onClick={() => startOpen && setStartOpen(false)}
+      onClick={onDesktopClick}
     >
       <div className="icons">
-        {/* Keep your existing DesktopIcon implementation; no id/selected props needed */}
         <DesktopIcon label="Bin" iconSrc="/recycle-bin.png" onOpen={() => setBinOpen(true)} />
         <DesktopIcon
           label="SEQUENCE.exe"
