@@ -1,7 +1,7 @@
 // src/desktop/DesktopShell.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import DesktopIcon from "./DesktopIcon";
 import Cracktro2003Modern from "@/components/Cracktro2003Modern";
 import Taskbar from "./Taskbar";
@@ -45,12 +45,56 @@ export default function DesktopShell() {
   const [sigGlitch, setSigGlitch] = useState(0);
   const [sigBloom, setSigBloom] = useState(0);
 
+  // -------- Aesthetic marquee only --------
+  const desktopRef = useRef<HTMLDivElement | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [dragRect, setDragRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+
+  const toRect = (a: { x: number; y: number }, b: { x: number; y: number }) => {
+    const x = Math.min(a.x, b.x);
+    const y = Math.min(a.y, b.y);
+    const w = Math.abs(a.x - b.x);
+    const h = Math.abs(a.y - b.y);
+    return { x, y, w, h };
+  };
+
+  const onDesktopMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+
+    // Only start marquee on empty desktop (don’t block icons or windows)
+    if (target.closest(".winRoot") || target.closest(".iconItem")) return;
+
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    if (startOpen) setStartOpen(false);
+
+    const bounds = desktopRef.current!.getBoundingClientRect();
+    const start = { x: e.clientX - bounds.left, y: e.clientY - bounds.top };
+    setDragging(true);
+    setDragStart(start);
+    setDragRect({ x: start.x, y: start.y, w: 0, h: 0 });
+  };
+
+  const onDesktopMouseMove: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    if (!dragging || !dragStart) return;
+    const bounds = desktopRef.current!.getBoundingClientRect();
+    const cur = { x: e.clientX - bounds.left, y: e.clientY - bounds.top };
+    setDragRect(toRect(dragStart, cur));
+  };
+
+  const onDesktopMouseUp: React.MouseEventHandler<HTMLDivElement> = () => {
+    if (!dragging) return;
+    setDragging(false);
+    setDragStart(null);
+    setDragRect(null);
+  };
+
   // Helpers for previews
   function openPreview(file: FileEntry) {
     setPreviews((list) => {
       const idx = list.findIndex((p) => p.file.id === file.id);
       if (idx >= 0) {
-        // Already open: raise it
         const next = list.slice();
         next[idx] = { ...next[idx], sig: next[idx].sig + 1 };
         return next;
@@ -71,13 +115,12 @@ export default function DesktopShell() {
     });
   }
 
-  // ESC handling (close most recent preview first, then others)
+  // ESC handling
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
 
       if (previews.length > 0) {
-        // close the last opened/last in array
         closePreview(previews[previews.length - 1].file.id);
       } else if (binOpen) setBinOpen(false);
       else if (bloomOpen) setBloomOpen(false);
@@ -101,37 +144,12 @@ export default function DesktopShell() {
         setSigKeygen((n) => n + 1);
       },
     },
-    binOpen && {
-      id: "bin",
-      label: "Recycle Bin",
-      onActivate: () => setSigBin((n) => n + 1),
-    },
-    thoughtsOpen && {
-      id: "thoughts",
-      label: "THOUGHTS",
-      onActivate: () => setSigThoughts((n) => n + 1),
-    },
-    studioOpen && {
-      id: "studio",
-      label: "STUDIO",
-      onActivate: () => setSigStudio((n) => n + 1),
-    },
-    echoOpen && {
-      id: "echo",
-      label: "Echo",
-      onActivate: () => setSigEcho((n) => n + 1),
-    },
-    glitchOpen && {
-      id: "glitch",
-      label: "Glitch",
-      onActivate: () => setSigGlitch((n) => n + 1),
-    },
-    bloomOpen && {
-      id: "bloom",
-      label: "Bloom",
-      onActivate: () => setSigBloom((n) => n + 1),
-    },
-    // one task per open preview
+    binOpen && { id: "bin", label: "Recycle Bin", onActivate: () => setSigBin((n) => n + 1) },
+    thoughtsOpen && { id: "thoughts", label: "THOUGHTS", onActivate: () => setSigThoughts((n) => n + 1) },
+    studioOpen && { id: "studio", label: "STUDIO", onActivate: () => setSigStudio((n) => n + 1) },
+    echoOpen && { id: "echo", label: "Echo", onActivate: () => setSigEcho((n) => n + 1) },
+    glitchOpen && { id: "glitch", label: "Glitch", onActivate: () => setSigGlitch((n) => n + 1) },
+    bloomOpen && { id: "bloom", label: "Bloom", onActivate: () => setSigBloom((n) => n + 1) },
     ...previews.map((p) => ({
       id: `preview:${p.file.id}`,
       label: p.file.name,
@@ -141,11 +159,15 @@ export default function DesktopShell() {
 
   return (
     <div
+      ref={desktopRef}
       className="desktop"
-      onMouseDown={() => (document.activeElement as HTMLElement | null)?.blur()}
+      onMouseDown={onDesktopMouseDown}
+      onMouseMove={onDesktopMouseMove}
+      onMouseUp={onDesktopMouseUp}
       onClick={() => startOpen && setStartOpen(false)}
     >
       <div className="icons">
+        {/* Keep your existing DesktopIcon implementation; no id/selected props needed */}
         <DesktopIcon label="Bin" iconSrc="/recycle-bin.png" onOpen={() => setBinOpen(true)} />
         <DesktopIcon
           label="SEQUENCE.exe"
@@ -162,7 +184,7 @@ export default function DesktopShell() {
         <Window
           chrome="external"
           title="SEQUENCE-1024x"
-          handleSelector=".panel"       // draggable from anywhere on keygen panel
+          handleSelector=".panel"
           activateSignal={sigKeygen}
         >
           <div>
@@ -178,7 +200,7 @@ export default function DesktopShell() {
             <BinWindow
               files={binFiles}
               onClose={() => setBinOpen(false)}
-              onOpenFile={(file) => openPreview(file)} // open as its own window
+              onOpenFile={(file) => openPreview(file)}
             />
           </div>
         </Window>
@@ -190,7 +212,7 @@ export default function DesktopShell() {
           key={p.file.id}
           file={p.file}
           onClose={() => closePreview(p.file.id)}
-          activateSignal={p.sig} // Window inside FilePreview listens to this
+          activateSignal={p.sig}
         />
       ))}
 
@@ -246,6 +268,19 @@ export default function DesktopShell() {
         tasks={tasks}
       />
 
+      {/* purely aesthetic marquee */}
+      {dragRect && (
+        <div
+          className="marquee"
+          style={{
+            left: dragRect.x,
+            top: dragRect.y,
+            width: dragRect.w,
+            height: dragRect.h,
+          }}
+        />
+      )}
+
       <style jsx>{`
         .desktop {
           min-height: 100svh;
@@ -263,6 +298,13 @@ export default function DesktopShell() {
           grid-auto-rows: min-content;
           gap: 14px;
           z-index: 2;
+        }
+        .marquee {
+          position: absolute;
+          z-index: 3; /* above icons, below windows */
+          border: 1px solid rgba(64, 110, 220, 0.9);   /* darker edge */
+          background: rgba(64, 110, 220, 0.22);        /* darker fill */
+          pointer-events: none;
         }
       `}</style>
     </div>
