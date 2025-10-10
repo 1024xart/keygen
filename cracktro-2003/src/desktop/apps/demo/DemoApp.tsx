@@ -55,8 +55,8 @@ function makePerAppRequest(appId: AppId) {
 // Patch-revealed art per app (put your gifs in /public/media/demo/)
 // NOTE: Partial so we don't have to list every AppId (e.g., "sequence")
 const ART_MAP: Partial<Record<AppId, string>> = {
-  echo:   "/media/demo/art2.gif",
-  glitch: "/media/demo/art3.gif",
+  echo:   "/media/demo/art8.gif",
+  glitch: "/media/demo/art9.gif",
   bloom:  "/media/demo/art1.gif",
 };
 
