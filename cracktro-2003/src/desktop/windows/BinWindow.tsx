@@ -38,7 +38,7 @@ const DEFAULT_FILES: FileEntry[] = [
       "0A 00 93 E2 41 41 1B A0 77 2D 6E 0E 4A 5D 5D 2C",
       "— BEGIN BLOCK —",
       "XQv+e8X+KPX9wD3uYk9R1y6o3VgJ2qz8WZk0rBf3mN7h…",
-      "…c9ca2f7a2b1e5a830a7d019be47a1f5e // ?? lots of noise",
+      "…c9ca2f7a2b1e5a830a7d019be47a1f5e",
       "— END BLOCK —",
     ].join("\n"),
   },
