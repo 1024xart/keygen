@@ -112,6 +112,88 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* === SequenceOS: non-breaking design tokens (dark-first) === */
+:root {
+  /* Surfaces (graphite → metal) */
+  --seq-bg-0: #0f1013;
+  --seq-bg-1: #12141a;
+  --seq-bg-2: #151822;
+
+  /* Edges & highlights */
+  --seq-stroke-0: #000000;
+  --seq-stroke-1: #2f3137;
+  --seq-hi-1: #2f313a;
+
+  /* Text */
+  --seq-text-hi: #e9eaee;
+  --seq-text:    #d4d6dc;
+  --seq-muted:   #a6aab1;
+
+  /* Accent (violet) */
+  --seq-accent:     #b667ff;
+  --seq-accent-2:   #5b2fb0;
+  --seq-accent-glow: rgba(182,103,255,.35);
+
+  /* Type sizes */
+  --seq-fs-10: 10px;
+  --seq-fs-11: 11px;
+  --seq-fs-12: 12px;
+  --seq-fs-14: 14px;
+
+  /* Radii */
+  --seq-r-2: 2px;
+  --seq-r-3: 3px;
+  --seq-r-6: 6px;
+  --seq-r-8: 8px;
+  --seq-r-10: 10px;
+
+  /* Elevations (consistent across taskbar/windows/menus) */
+  --seq-elev-0: inset 0 1px 0 var(--seq-hi-1),
+                inset -1px -1px 0 var(--seq-stroke-0),
+                0 0 0 1px var(--seq-stroke-0);
+  --seq-elev-1: 0 10px 24px rgba(0,0,0,.45),
+                0 0 0 1px var(--seq-stroke-1),
+                inset 0 1px 0 #6a6a6a,
+                inset -1px -1px 0 #000;
+  --seq-elev-2: 0 18px 42px rgba(0,0,0,.55),
+                0 0 0 1px var(--seq-stroke-1),
+                inset 0 1px 0 #6a6a6a,
+                inset -1px -1px 0 #000;
+
+  /* Motion */
+  --seq-ease-snap: cubic-bezier(.22,.9,.23,1);
+  --seq-dur-press: 70ms;
+  --seq-dur-hover: 140ms;
+  --seq-dur-menu:  220ms;
+  --seq-dur-win:   300ms;
+
+  /* Subtle texture */
+  --seq-noise:
+    radial-gradient(1px 1px at 30% 30%, rgba(255,255,255,.02), transparent 60%),
+    radial-gradient(1px 1px at 70% 70%, rgba(255,255,255,.02), transparent 60%);
+
+  /* Fonts (hook to next/font vars if present) */
+  --seq-font-ui: var(--font-inter, var(--font-geist-sans, system-ui));
+  --seq-font-mono: var(--font-plexmono, var(--font-geist-mono, ui-monospace));
+}
+
+/* Optional light-tune if you ever flip to light mode class */
+:root:not(.dark) {
+  /* keep the same accent; surfaces get slightly lighter if you want */
+  /* (you can override later if you implement a true light Sequence theme) */
+}
+
+/* Global helpers */
+.seq-ui     { font: 12px/1.2 var(--seq-font-ui), system-ui, sans-serif; }
+.seq-mono   { font: 11px/1.25 var(--seq-font-mono), ui-monospace, monospace; letter-spacing:.2px; }
+.seq-noise  { background-image: var(--seq-noise); }
+.seq-focus  { outline: 2px solid var(--seq-accent); outline-offset: 2px; }
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .seq-anim-none, .seq-anim-none * { animation: none !important; transition: none !important; }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

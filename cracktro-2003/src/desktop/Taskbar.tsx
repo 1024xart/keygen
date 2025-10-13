@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Wifi, Volume2 } from "lucide-react";
 
 /* ---------------- Types ---------------- */
 type Task = { id: string; label: string; onActivate: () => void };
@@ -132,8 +133,8 @@ Welcome back. Your workspace is ready.`,
 
         <div className="tray">
           <div className="vsep" />
-          <NetIcon className="trayIcon" aria-hidden />
-          <VolIcon className="trayIcon" aria-hidden />
+          <Wifi className="trayIcon" size={14} aria-hidden />
+          <Volume2 className="trayIcon" size={14} aria-hidden />
           <Clock />
         </div>
       </div>
@@ -421,6 +422,25 @@ Welcome back. Your workspace is ready.`,
           backface-visibility: hidden;
           transform: translateZ(0);
         }
+
+        .window{
+          background: linear-gradient(180deg, var(--seq-bg-1), var(--seq-bg-2));
+          border-radius: var(--seq-r-8);
+          box-shadow: var(--seq-elev-1);
+          border: 1px solid var(--seq-stroke-0);
+          outline: 1px solid var(--seq-stroke-1);
+        }
+        .window .titlebar{
+          height:34px; display:flex; align-items:center; gap:8px; padding:0 10px;
+          background: linear-gradient(180deg,#1a1d27,#12141a);
+          box-shadow: inset 0 1px 0 #6a6a6a, inset -1px -1px 0 #000;
+        }
+        .window .content{ padding:12px; }
+        .window .controls button{
+          width:22px; height:22px; border-radius: var(--seq-r-2);
+          background:#1a1b21; box-shadow: var(--seq-elev-0); border:1px solid #000;
+        }
+        .window .controls button:hover{ box-shadow: var(--seq-elev-0), 0 0 18px var(--seq-accent-glow); }
       `}</style>
     </>
   );
@@ -536,5 +556,5 @@ function Clock() {
     const id = setInterval(tick, 15_000);
     return () => clearInterval(id);
   }, []);
-  return <span aria-label="Clock">{time}</span>;
+  return <span aria-label="Clock" className="seq-mono" style={{ fontFeatureSettings:"'tnum' 1" }}>{time}</span>;
 }

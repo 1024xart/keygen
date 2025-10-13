@@ -11,8 +11,6 @@ import React, {
 } from "react";
 
 type Pos = { x: number; y: number };
-
-// — module-level z counter so newest window goes on top
 let Z_COUNTER = 10;
 
 type Props = {
@@ -58,7 +56,7 @@ export default function Window({
   activateSignal,
 }: Props) {
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const zRef = useRef<number>(Math.max(zIndex, ++Z_COUNTER)); // newest on mount
+  const zRef = useRef<number>(Math.max(zIndex, ++Z_COUNTER));
   const dragData = useRef<{
     startX: number;
     startY: number;
@@ -124,7 +122,6 @@ export default function Window({
     return () => window.removeEventListener("resize", onResize);
   }, [clampToBounds]);
 
-  // drag handle lookup
   const getHandleEl = useCallback((): HTMLElement | null => {
     const el = rootRef.current;
     if (!el) return null;
@@ -133,10 +130,9 @@ export default function Window({
     return el.querySelector<HTMLElement>(selector);
   }, [chrome, handleSelector]);
 
-  // raise on mousedown
   const raise = useCallback(() => {
     zRef.current = ++Z_COUNTER;
-    setPos((p) => ({ ...p })); // tiny state nudge to re-render with new z
+    setPos((p) => ({ ...p })); // nudge to re-render with new z
   }, []);
 
   useEffect(() => {
@@ -149,8 +145,7 @@ export default function Window({
       const target = e.target as HTMLElement;
       if (target.closest("button, input, select, textarea, a")) return;
 
-      raise(); // bring to front on grab
-
+      raise();
       (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
       dragData.current = {
         startX: e.clientX,
@@ -192,11 +187,8 @@ export default function Window({
     };
   }, [pos, clampToBounds, getHandleEl, raise]);
 
-  // programmatic raise (taskbar click)
   useEffect(() => {
-    if (activateSignal != null) {
-      raise();
-    }
+    if (activateSignal != null) raise();
   }, [activateSignal, raise]);
 
   return (
@@ -211,13 +203,15 @@ export default function Window({
         opacity: positioned ? 1 : 0,
       }}
       onMouseDown={(e) => e.stopPropagation()}
+      role="dialog"
+      aria-label={title}
     >
       {chrome === "internal" ? (
         <div className="winFrame">
-          <div className="winTitleBar">
-            <span className="winTitle">{title}</span>
+          <div className="winTitleBar" data-drag-region>
+            <div className="winTitle">{title}</div>
             {onRequestClose && (
-              <button className="winClose" aria-label="Close" onClick={onRequestClose}>
+              <button className="winCtrl winClose" aria-label="Close window" onClick={onRequestClose}>
                 ×
               </button>
             )}
@@ -229,43 +223,58 @@ export default function Window({
       )}
 
       <style jsx>{`
-        .winFrame {
-          background: #0f0f0f;
-          color: #e6e6e6;
-          border: 1px solid #444;
-          box-shadow: 0 0 0 1px #333, 0 12px 40px rgba(0, 0, 0, 0.8);
-          font: 11px Tahoma, "MS Sans Serif", sans-serif;
+        /* ====== SequenceOS window chrome ====== */
+        .winFrame{
+          background: linear-gradient(180deg, var(--seq-bg-1), var(--seq-bg-2));
+          color: var(--seq-text-hi);
+          border-radius: var(--seq-r-8);
+          border: 1px solid var(--seq-stroke-0);
+          outline: 1px solid var(--seq-stroke-1);
+          box-shadow: var(--seq-elev-1);
           display: grid;
           grid-template-rows: auto 1fr;
           min-width: 320px;
+          font: 12px/1.2 var(--seq-font-ui), system-ui, sans-serif;
         }
-        .winTitleBar {
-          background: #1a1aa6;
-          color: #fff;
-          padding: 4px 8px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-weight: bold;
-          cursor: default; /* CHANGED: no 'move' cursor */
-          user-select: none;
+
+        .winTitleBar{
+          height: 34px;
+          display: flex; align-items: center; gap: 8px;
+          padding: 0 10px; user-select: none;
+          background: linear-gradient(180deg, #1a1d27, #12141a);
+          box-shadow: inset 0 1px 0 #6a6a6a, inset -1px -1px 0 #000;
+          cursor: default;
         }
-        .winTitle { pointer-events: none; }
-        .winClose {
-          background: #1a1a1a;
-          color: #e6e6e6;
-          border: 1px solid #000;
-          width: 22px;
-          height: 18px;
-          line-height: 16px;
-          padding: 0;
+
+        .winTitle{
+          font-weight: 700; letter-spacing: .3px; pointer-events: none;
+        }
+
+        .winCtrl{
+          width: 22px; height: 22px; display: grid; place-items: center;
+          border-radius: var(--seq-r-2);
+          background: #1a1b21; color: var(--seq-text-hi);
+          border: 1px solid #000; box-shadow: var(--seq-elev-0);
           cursor: pointer;
-          box-shadow: inset 1px 1px 0 #6a6a6a, inset -1px -1px 0 #000;
-          appearance: none; border-radius: 0;
+          transition: transform var(--seq-dur-press) var(--seq-ease-snap),
+                      box-shadow var(--seq-dur-hover) var(--seq-ease-snap),
+                      filter var(--seq-dur-hover) var(--seq-ease-snap);
         }
-        .winClose:focus { outline: none; }
-        .winClose:active { box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a6a; }
-        .winBody { padding: 8px; }
+        .winCtrl:hover{ box-shadow: var(--seq-elev-0), 0 0 18px var(--seq-accent-glow); }
+        .winCtrl:active{ transform: translateY(1px); }
+        .winClose:hover{ background: #25151f; }
+
+        .winBody{
+          padding: 12px; /* symmetric padding fixes the “uneven gaps” */
+        }
+
+        /* Utility: to perfectly center inner panes (e.g., activation UI) */
+        :global(.centerContent){ display: grid; place-items: center; min-height: 220px; }
+
+        /* Respect reduced motion */
+        @media (prefers-reduced-motion: reduce){
+          .winCtrl{ transition: none !important; }
+        }
       `}</style>
     </div>
   );
