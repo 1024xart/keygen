@@ -1,7 +1,12 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  compiler: {
+    styledComponents: {
+      ssr: true,
+      displayName: true,
+    } as any,
+  },
 };
 
 export default nextConfig;

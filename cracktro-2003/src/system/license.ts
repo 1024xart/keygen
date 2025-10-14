@@ -1,23 +1,24 @@
-"use client";
+// src/system/license.ts
+'use client';
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from 'react';
 
 /** Add your art apps here as you create them. */
-export type AppId = "sequence" | "TR01" | "BMR08" | "BR09";
+export type AppId = 'sequence' | 'TR01' | 'BMR08' | 'BR09';
 
 export type License = {
   key: string;
   name: string;
   appId: AppId;
-  issuedAt: number;          // epoch ms
-  expiresAt?: number;        // epoch ms (optional = perpetual)
+  issuedAt: number;        // epoch ms
+  expiresAt?: number;      // epoch ms (optional = perpetual)
 };
 
 type Store = {
   byApp: Record<AppId, License | null>;
 };
 
-const STORAGE_KEY = "seq_licenses_v2";
+const STORAGE_KEY = 'seq_licenses_v2';
 
 // ---- internal state --------------------------------------------------------
 let state: Store = {
@@ -37,52 +38,80 @@ function emitSoon() {
   if (emitScheduled) return;
   emitScheduled = true;
   const schedule =
-    typeof queueMicrotask === "function"
+    typeof queueMicrotask === 'function'
       ? queueMicrotask
       : (fn: () => void) => Promise.resolve().then(fn);
 
   schedule(() => {
     emitScheduled = false;
-    // Notify all subscribers after the current render flush.
     listeners.forEach((l) => l());
   });
 }
 
 function save() {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {}
 }
 
+function coerceStore(obj: unknown): Store | null {
+  if (!obj || typeof obj !== 'object') return null;
+  const byApp = (obj as any).byApp ?? {};
+  const coerceLic = (x: any): License | null => {
+    if (!x || typeof x !== 'object') return null;
+    const { key, name, appId, issuedAt, expiresAt } = x as Partial<License>;
+    if (!key || !name || !appId || typeof issuedAt !== 'number') return null;
+    const lic: License = {
+      key: String(key),
+      name: String(name),
+      appId: appId as AppId,
+      issuedAt,
+      ...(typeof expiresAt === 'number' ? { expiresAt } : {}),
+    };
+    return lic;
+  };
+  const next: Store = {
+    byApp: {
+      sequence: coerceLic(byApp.sequence) ?? null,
+      TR01: coerceLic(byApp.TR01) ?? null,
+      BMR08: coerceLic(byApp.BMR08) ?? null,
+      BR09: coerceLic(byApp.BR09) ?? null,
+    },
+  };
+  return next;
+}
+
 function load() {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return;
-    const parsed = JSON.parse(raw) as Partial<Store>;
-    if (parsed && parsed.byApp) {
-      state = {
-        byApp: {
-          sequence: parsed.byApp.sequence ?? null,
-          TR01: parsed.byApp.TR01 ?? null,
-          BMR08: parsed.byApp.BMR08 ?? null,
-          BR09: parsed.byApp.BR09 ?? null,
-        },
-      };
-    }
+    const parsed = JSON.parse(raw) as unknown;
+    const next = coerceStore(parsed);
+    if (next) state = next;
   } catch {}
 }
 
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   load();
   // cross-tab sync
-  window.addEventListener("storage", (e) => {
+  window.addEventListener('storage', (e) => {
     if (e.key === STORAGE_KEY) {
       load();
       emitSoon();
     }
   });
+}
+
+// ---- helpers ---------------------------------------------------------------
+export function isExpired(lic: License | null | undefined): boolean {
+  if (!lic) return false;
+  return !!(lic.expiresAt && Date.now() > lic.expiresAt);
+}
+
+export function isActive(lic: License | null | undefined): boolean {
+  return !!lic && !isExpired(lic);
 }
 
 // ---- public API ------------------------------------------------------------
@@ -106,6 +135,10 @@ export function getLicense(appId: AppId): License | null {
   return state.byApp[appId];
 }
 
+/**
+ * Reactive hook: returns the license (or null), plus derived flags.
+ * Keeps your original return shape for compatibility.
+ */
 export function useLicense(appId: AppId) {
   const subscribe = (cb: () => void) => {
     listeners.add(cb);
@@ -116,7 +149,7 @@ export function useLicense(appId: AppId) {
   const s = useSyncExternalStore(subscribe, getSnap, getSnap);
   const lic = s.byApp[appId];
 
-  const expired = !!(lic && lic.expiresAt && Date.now() > lic.expiresAt);
+  const expired = isExpired(lic);
 
   const remainingMs = lic?.expiresAt
     ? Math.max(0, lic.expiresAt - Date.now())
@@ -131,4 +164,13 @@ export function useLicense(appId: AppId) {
   }, [lic?.issuedAt, lic?.expiresAt, expired]);
 
   return { license: lic, expired, remainingMs, progress };
+}
+
+/**
+ * Convenience hook for apps that only care about “patched?”.
+ * Returns `{ patched: boolean, license: License | null }`.
+ */
+export function usePatched(appId: AppId) {
+  const { license } = useLicense(appId);
+  return { patched: isActive(license), license: license ?? null };
 }
