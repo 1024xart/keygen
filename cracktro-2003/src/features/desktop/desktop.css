@@ -267,10 +267,6 @@
   .panel-keygen {
     width: min(630px, 44vw);
   }
-  .art-stage img {
-    max-width: 44vw;
-    max-height: 78svh;
-  }
 }
 
 .scene-icon-picture svg {

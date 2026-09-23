@@ -10,8 +10,8 @@
 }
 .art-stage img {
   display: block;
-  max-width: min(88vw, 1000px);
-  max-height: 82svh;
+  max-width: min(1024px, calc(100vw - 32px));
+  max-height: min(1024px, calc(100svh - 140px));
   width: auto;
   height: auto;
   object-fit: contain;
@@ -44,22 +44,4 @@
   position: static;
   padding: 12px 16px 0;
   opacity: 1;
-}
-@media (max-width: 600px) {
-  .license-entry {
-    padding: 24px;
-  }
-  .activation-title {
-    font-size: 44px;
-  }
-  .art-stage img {
-    max-width: 94vw;
-  }
-}
-
-@media (min-width: 1100px) {
-  .art-stage img {
-    max-width: 44vw;
-    max-height: 78svh;
-  }
 }
