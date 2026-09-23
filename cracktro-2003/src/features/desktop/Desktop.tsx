@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- Original desktop icons. */
 import { useRef, useState, type CSSProperties } from "react";
 import Window from "./Window";
-import PixelIcon from "./PixelIcon";
+import ReadmeIcon from "./ReadmeIcon";
 import Scene from "./Scene";
 import { Readme } from "./Readme";
 import Keygen from "../keygen/Keygen";
@@ -26,9 +26,7 @@ const icons: {
   x: number;
   y: number;
   depth: number;
-  kind?: "text" | "paint" | "disk";
   image?: string;
-  color?: string;
 }[] = [
   {
     id: "keygen",
@@ -46,12 +44,18 @@ const icons: {
     image: "/art/thumbnails/BMR08.webp",
   },
   { id: "BR09", x: 62, y: 73, depth: 0.6, image: "/art/thumbnails/BR09.webp" },
-  { id: "readme", x: 53, y: 13, depth: 0.65, kind: "text" },
+  { id: "readme", x: 53, y: 13, depth: 0.65 },
   { id: "ST04", x: 28, y: 112, depth: 0.7, image: "/art/thumbnails/TR01.webp" },
   { id: "ST05", x: 76, y: 127, depth: 1, image: "/art/thumbnails/BMR08.webp" },
   { id: "ST06", x: 48, y: 155, depth: 0.8, image: "/art/thumbnails/BR09.webp" },
   { id: "ST07", x: 19, y: 179, depth: 1.1, image: "/art/thumbnails/TR01.webp" },
-  { id: "ST08", x: 79, y: 195, depth: 0.6, image: "/art/thumbnails/BMR08.webp" },
+  {
+    id: "ST08",
+    x: 79,
+    y: 195,
+    depth: 0.6,
+    image: "/art/thumbnails/BMR08.webp",
+  },
   { id: "ST09", x: 44, y: 220, depth: 0.9, image: "/art/thumbnails/BR09.webp" },
 ];
 
@@ -178,13 +182,11 @@ export default function Desktop() {
             }
           >
             <span className="scene-icon-picture">
-              {icon.image ? (
-                <img src={icon.image} alt="" />
-              ) : (
-                <PixelIcon kind={icon.kind!} color={icon.color} />
-              )}
+              {icon.image ? <img src={icon.image} alt="" /> : <ReadmeIcon />}
             </span>
-            <span className="scene-icon-label">{appTitle(icon.id).toLowerCase()}</span>
+            <span className="scene-icon-label">
+              {appTitle(icon.id).toLowerCase()}
+            </span>
           </button>
         ))}
       </Scene>
@@ -202,16 +204,8 @@ export default function Desktop() {
                 ? "readme"
                 : "art"
           }
-          wide={releases.some((release) => release.id === app.id)}
           onFocus={() => focus(app.id)}
           onClose={() => close(app.id)}
-          onMinimize={() =>
-            setApps((current) =>
-              current.map((entry) =>
-                entry.id === app.id ? { ...entry, minimized: true } : entry,
-              ),
-            )
-          }
         >
           {app.id === "keygen" ? (
             <Keygen

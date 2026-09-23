@@ -6,11 +6,9 @@ type Props = {
   active: boolean;
   minimized: boolean;
   order: number;
-  wide?: boolean;
   kind: "keygen" | "readme" | "art";
   onFocus: () => void;
   onClose: () => void;
-  onMinimize: () => void;
 };
 export default function Window({
   title,
@@ -68,7 +66,10 @@ export default function Window({
     };
   }, []);
   useEffect(() => {
-    if (minimized) { placed.current = false; return; }
+    if (minimized) {
+      placed.current = false;
+      return;
+    }
     if (!panel.current) return;
     const fit = () => {
       const el = panel.current!;
