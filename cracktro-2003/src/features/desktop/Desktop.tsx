@@ -44,6 +44,7 @@ const icons: {
     image: "/art/thumbnails/BMR08.webp",
   },
   { id: "BR09", x: 62, y: 73, depth: 0.6, image: "/art/thumbnails/BR09.webp" },
+  { id: "DS15", x: 82, y: 94, depth: 0.85, image: "/art/thumbnails/DS15.webp" },
   { id: "readme", x: 53, y: 13, depth: 0.65 },
   { id: "ST04", x: 28, y: 112, depth: 0.7, image: "/art/thumbnails/TR01.webp" },
   { id: "ST05", x: 76, y: 127, depth: 1, image: "/art/thumbnails/BMR08.webp" },

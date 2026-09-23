@@ -18,6 +18,9 @@ export default function ReleaseViewer({ id }: { id: ReleaseId }) {
         <span>{release.title}</span>
         <span>{release.number} / SEQUENCE</span>
       </figcaption>
+      {"description" in release && (
+        <p className="art-description">{release.description}</p>
+      )}
       {error && <p role="alert">{error}</p>}
     </figure>
   );

@@ -33,6 +33,18 @@
 .art-piece:hover figcaption {
   opacity: 1;
 }
+.art-description {
+  margin: 0;
+  padding: 12px 16px;
+  color: #aaa;
+  font: 10px/1.6 var(--mono);
+  text-align: center;
+}
+.art-piece:has(.art-description) figcaption {
+  position: static;
+  padding: 12px 16px 0;
+  opacity: 1;
+}
 @media (max-width: 600px) {
   .license-entry {
     padding: 24px;

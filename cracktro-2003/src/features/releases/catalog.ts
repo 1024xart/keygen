@@ -1,5 +1,14 @@
 export const releases = [
   {
+    id: "DS15",
+    number: "010",
+    title: "dark_souls_15",
+    description: "happy anniversary to the first video game ever made",
+    file: "/art/releases/dark_souls_15.gif",
+    size: "1.44 MB",
+    version: "1.0",
+  },
+  {
     id: "TR01",
     number: "001",
     title: "if_looks_could_shimmer",

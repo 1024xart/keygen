@@ -177,7 +177,7 @@ try {
   await evaluate("document.fonts.ready");
   assert.equal(
     await evaluate("document.querySelectorAll('.scene-icon').length"),
-    11,
+    12,
   );
   assert(await evaluate("document.fonts.check('14px W95FA')"));
   assert(await evaluate("!document.querySelector('.art-stage img')"));
@@ -304,6 +304,7 @@ try {
     "empty_space",
     "this_was_my_first_attempt",
     "study 04",
+    "dark_souls_15",
     "study 05",
     "study 06",
     "study 07",
@@ -337,7 +338,7 @@ try {
   assert(await evaluate("document.documentElement.scrollWidth <= innerWidth"));
   assert.equal(errors.length, 0, errors.join("\n"));
   console.log(
-    "PASS: background effects, scroll, reduced motion, keygen music, all nine artworks open without licensing, reload and mobile.",
+    "PASS: background effects, scroll, reduced motion, keygen music, all ten artworks open without licensing, reload and mobile.",
   );
 } finally {
   socket?.close();
