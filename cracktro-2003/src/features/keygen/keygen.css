@@ -1,0 +1,153 @@
+.panel-keygen .keygen {
+  padding: 0;
+  background: #07080b;
+  color: #e3e7ed;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.keygen-banner {
+  background: #000;
+  border: 0;
+  box-shadow: none;
+  overflow: hidden;
+}
+.keygen-banner img {
+  width: 100%;
+  display: block;
+}
+.keygen-body {
+  padding: 24px 26px 22px;
+  background: linear-gradient(125deg, #16191f 0%, #0b0d12 45%, #11151c 100%);
+  border: 0;
+  box-shadow: none;
+}
+.keygen-fields {
+  display: grid;
+  grid-template-columns: 65px minmax(0, 1fr);
+  gap: 14px 15px;
+  align-items: center;
+}
+.keygen-fields > label {
+  color: #929ba8;
+  font: 10px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.keygen-fields input,
+.keygen-fields select {
+  width: 100%;
+  height: 38px;
+  background: #080a0e;
+  color: #e4e9f3;
+  border: 0;
+  border-bottom: 1px solid #424957;
+  box-shadow: none;
+  padding: 8px 12px;
+  font: 13px var(--mono);
+}
+.keygen-fields input:focus-visible,
+.keygen-fields select:focus-visible {
+  outline: 1px solid #9daec5;
+  outline-offset: 2px;
+}
+.serial-output {
+  display: flex;
+  align-items: stretch;
+  background: #06070a;
+  border: 1px solid #3e4859;
+  margin: 3px 0 0;
+}
+.serial-output input {
+  height: 48px;
+  background: transparent;
+  border: 0;
+  text-align: center;
+  font: 15px var(--mono);
+  letter-spacing: 0.13em;
+  user-select: all;
+  min-width: 0;
+}
+.serial-output button {
+  background: none;
+  border: 0;
+  border-left: 1px solid #333b48;
+  color: #aab7c9;
+  padding: 0 14px;
+  font-size: 11px;
+}
+.patch-progress {
+  margin-top: 24px;
+  height: 3px;
+  background: #303642;
+}
+.patch-progress span {
+  height: 100%;
+  display: block;
+  background: linear-gradient(90deg, #546781, #e0edff);
+}
+.keygen-status {
+  padding: 11px 0 19px;
+  min-height: 44px;
+  font: 10px/1.4 var(--mono);
+  color: #a2afc1;
+}
+.keygen-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 0.65fr 38px;
+  gap: 8px;
+}
+.keygen .os-button {
+  min-height: 37px;
+  padding: 8px;
+  color: #c7d0dd;
+  background: #151a23;
+  border: 1px solid #404956;
+  box-shadow: none;
+  font:
+    12px Arial,
+    Helvetica,
+    sans-serif;
+}
+.keygen .os-button.primary:not(:disabled) {
+  background: linear-gradient(
+    175deg,
+    #f0f4f9,
+    #adb8c8 46%,
+    #cbd4df 49%,
+    #7f8e9f
+  );
+  color: #0a1018;
+  border-color: #c7d0dc;
+}
+.keygen .os-button:hover:not(:disabled) {
+  background: #283343;
+  color: #fff;
+  border-color: #8c9db5;
+}
+.keygen .os-button:disabled {
+  opacity: 0.35;
+}
+.music-button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+@media (max-width: 700px) {
+  .keygen-body {
+    padding: 20px 16px;
+  }
+  .keygen-fields {
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 12px 8px;
+  }
+  .keygen-fields input,
+  .keygen-fields select {
+    font-size: 16px;
+  }
+  .serial-output input {
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+  .serial-output button {
+    padding: 0 8px;
+  }
+}

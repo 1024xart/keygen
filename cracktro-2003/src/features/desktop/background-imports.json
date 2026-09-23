@@ -1,0 +1,99 @@
+{
+  "activeCategory": "brutalist nature",
+  "images": [
+    {
+      "id": "brutalist-nature-20112060",
+      "src": "/wallpapers/stock/brutalist-nature-20112060.jpg",
+      "depth": "/wallpapers/stock/brutalist-nature-20112060-depth.png",
+      "category": "brutalist nature",
+      "photoId": 20112060,
+      "credit": {
+        "photographer": "Samuel Jerónimo",
+        "url": "https://www.pexels.com/photo/exterior-of-a-warehouse-20112060/"
+      },
+      "importedAt": "2026-09-23T03:07:43.886Z",
+      "license": "https://www.pexels.com/license/"
+    },
+    {
+      "id": "brutalist-nature-30797259",
+      "src": "/wallpapers/stock/brutalist-nature-30797259.jpg",
+      "depth": "/wallpapers/stock/brutalist-nature-30797259-depth.png",
+      "category": "brutalist nature",
+      "photoId": 30797259,
+      "credit": {
+        "photographer": "Dominik Gryzbon",
+        "url": "https://www.pexels.com/photo/barbican-centre-s-brutalist-architecture-in-london-30797259/"
+      },
+      "importedAt": "2026-09-23T03:07:45.126Z",
+      "license": "https://www.pexels.com/license/"
+    },
+    {
+      "id": "brutalist-nature-15800503",
+      "src": "/wallpapers/stock/brutalist-nature-15800503.jpg",
+      "depth": "/wallpapers/stock/brutalist-nature-15800503-depth.png",
+      "category": "brutalist nature",
+      "photoId": 15800503,
+      "credit": {
+        "photographer": "Giuseppe  Di Maria",
+        "url": "https://www.pexels.com/photo/interior-of-an-abandoned-building-15800503/"
+      },
+      "importedAt": "2026-09-23T03:07:47.598Z",
+      "license": "https://www.pexels.com/license/"
+    },
+    {
+      "id": "brutalist-nature-15796474",
+      "src": "/wallpapers/stock/brutalist-nature-15796474.jpg",
+      "depth": "/wallpapers/stock/brutalist-nature-15796474-depth.png",
+      "category": "brutalist nature",
+      "photoId": 15796474,
+      "credit": {
+        "photographer": "Robert So",
+        "url": "https://www.pexels.com/photo/sunlit-building-wall-with-bars-15796474/"
+      },
+      "importedAt": "2026-09-23T03:07:48.559Z",
+      "license": "https://www.pexels.com/license/"
+    },
+    {
+      "id": "brutalist-nature-32384814",
+      "src": "/wallpapers/stock/brutalist-nature-32384814.jpg",
+      "depth": "/wallpapers/stock/brutalist-nature-32384814-depth.png",
+      "category": "brutalist nature",
+      "photoId": 32384814,
+      "credit": {
+        "photographer": "İrfan Simsar",
+        "url": "https://www.pexels.com/photo/brutalist-walkway-surrounded-by-spring-greenery-32384814/"
+      },
+      "importedAt": "2026-09-23T03:07:50.128Z",
+      "license": "https://www.pexels.com/license/"
+    },
+    {
+      "id": "brutalist-nature-28581401",
+      "src": "/wallpapers/stock/brutalist-nature-28581401.jpg",
+      "depth": "/wallpapers/stock/brutalist-nature-28581401-depth.png",
+      "category": "brutalist nature",
+      "photoId": 28581401,
+      "credit": {
+        "photographer": "Julia Fuchs",
+        "url": "https://www.pexels.com/photo/abandoned-building-with-graffiti-in-athens-28581401/"
+      },
+      "importedAt": "2026-09-23T03:07:51.022Z",
+      "license": "https://www.pexels.com/license/"
+    },
+    {
+      "id": "brutalist-nature-34340837",
+      "src": "/wallpapers/stock/brutalist-nature-34340837.jpg",
+      "depth": "/wallpapers/stock/brutalist-nature-34340837-depth.png",
+      "category": "brutalist nature",
+      "photoId": 34340837,
+      "credit": {
+        "photographer": "Robert So",
+        "url": "https://www.pexels.com/photo/abandoned-industrial-building-exterior-34340837/"
+      },
+      "importedAt": "2026-09-23T03:07:52.036Z",
+      "license": "https://www.pexels.com/license/"
+    }
+  ],
+  "excludedPhotoIds": [
+    18267104
+  ]
+}

@@ -1,6 +1,5 @@
-"use client";
-import DesktopShell from "@/desktop/DesktopShell";
+import Desktop from "@/features/desktop/Desktop";
 
 export default function Page() {
-  return <DesktopShell />;
+  return <Desktop />;
 }
