@@ -323,6 +323,24 @@ try {
     await click('[aria-label="Close ' + title + '"]');
   }
   assert(await evaluate("!localStorage.getItem('seq_patches_v3')"));
+  await click('[aria-label="Open dark_souls_15"]');
+  for (const deviceScaleFactor of [1, 1.5, 2]) {
+    await cdp("Emulation.setDeviceMetricsOverride", {
+      width: 1800, height: 1400, deviceScaleFactor, mobile: false,
+    });
+    // CDP can change DPR without emitting the resize event produced by browser zoom.
+    await evaluate("window.dispatchEvent(new Event('resize'))");
+    await waitFor(`(() => {
+      const image = document.querySelector('[role="dialog"][aria-label="dark_souls_15"] .art-stage img');
+      const rect = image.getBoundingClientRect();
+      return image.naturalWidth === 1024 &&
+        Math.abs(rect.width * devicePixelRatio - 1024) < 2 &&
+        Math.abs(rect.height * devicePixelRatio - 1024) < 2;
+    })()`, `native artwork pixels at scale ${deviceScaleFactor}`);
+  }
+  await cdp("Emulation.setDeviceMetricsOverride", {
+    width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false,
+  });
   await cdp("Page.reload");
   await readyScene();
   await click('[aria-label="Open if_looks_could_shimmer"]');
