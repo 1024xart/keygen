@@ -19,7 +19,7 @@ Open http://localhost:3000. For production, run `npm.cmd run build`, then `npm.c
 - Six temporary study icons reuse those artworks for testing scroll and activation.
 - Seven stock backgrounds in the brutalist nature collection. Excluded photo IDs stay excluded during imports.
 
-Generate a key in sequence.exe, paste it into the matching piece, register it, then patch in the keygen. Generation is immediate; patching runs a progress bar before revealing the artwork. This is a theatrical client-side gate, not DRM.
+Every artwork opens immediately without a key or patch, including the study placeholders. The keygen retains music and standalone key generation; it has no patch target while its future single-purpose unlock is being designed.
 
 Panels open centered and can be dragged by their handles. Background clicks dismiss them; reopening preserves the current key. Opening the keygen starts its soundtrack; the speaker toggles music and closing stops it. Holding empty background amplifies the depth distortion. Reduced-motion preferences disable scene animation; original artwork GIFs remain animated.
 
@@ -49,6 +49,6 @@ npm.cmd run test:browser
 
 Browser checks use installed Chrome/Edge, a disposable profile, and screenshots in ignored `.artifacts/`. Override `CHROME_PATH` or `TEST_URL` as needed. Build performs lint/type checks.
 
-Patches persist under `seq_patches_v3`; generated keys use `sequence:key:*`. Storage events synchronize licenses across tabs.
+Previous browser license records are left untouched but are no longer consulted by the artwork viewer.
 
 [W95FA](https://www.dafont.com/w95fa.font) is bundled with its supplied SIL Open Font License in `public/fonts/`. Background sources are credited in [CREDITS.md](public/wallpapers/CREDITS.md) and the stock manifest.

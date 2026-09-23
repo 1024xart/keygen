@@ -82,7 +82,7 @@ try {
       message.method === "Log.entryAdded" &&
       message.params.entry.level === "error"
     )
-      errors.push(message.params.entry.text);
+      errors.push(`${message.params.entry.text} ${message.params.entry.url || ""}`);
   });
   function send(method, params = {}, sessionId) {
     return new Promise((resolveCommand, reject) => {
@@ -192,9 +192,13 @@ try {
     "All depth maps load and match their photograph aspect ratios",
   );
   await screenshot("desktop");
-  await evaluate("document.querySelector('.scene-icons').scrollTop=innerHeight");
-  await waitFor("document.querySelector('.scene-icons').scrollTop >= innerHeight - 2");
-  await screenshot('scrolled-art-icons');
+  await evaluate(
+    "document.querySelector('.scene-icons').scrollTop=innerHeight",
+  );
+  await waitFor(
+    "document.querySelector('.scene-icons').scrollTop >= innerHeight - 2",
+  );
+  await screenshot("scrolled-art-icons");
   await evaluate("document.querySelector('.scene-icons').scrollTop=0");
 
   const sceneA = await evaluate(
@@ -266,9 +270,7 @@ try {
   );
   await screenshot("keygen");
   await clickText("Generate");
-  await waitFor(
-    "document.querySelector('#serial').value.length === 14 && !document.querySelector('#serial').disabled",
-  );
+  await waitFor("document.querySelector('#serial').value.length === 14");
   assert.equal(
     await evaluate(
       "document.querySelector('[role=progressbar]').getAttribute('aria-valuenow')",
@@ -291,121 +293,40 @@ try {
       "!!document.querySelector('.lucide-volume-off') && document.querySelector('audio').paused",
     ),
   );
-  const key = await evaluate("document.querySelector('#serial').value");
-  await clickText("Patch");
   assert(
     await evaluate(
-      "document.querySelector('.keygen-status').textContent.includes('before patching')",
+      "[...document.querySelectorAll('.keygen button')].find(b=>b.textContent.trim()==='Patch').disabled",
     ),
   );
-  await click('[aria-label="Open if_looks_could_shimmer"]');
-  await waitFor("!!document.querySelector('#TR01-license')");
-  assert.equal(
-    await evaluate(
-      "document.querySelectorAll('.piece-overlay:not([hidden])').length",
-    ),
-    2,
-  );
-  const handle = await evaluate(
-    "(()=>{const r=document.querySelector('[aria-label=\"Move sequence.exe\"]').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2,left:document.querySelector('.panel-keygen').getBoundingClientRect().left}})()",
-  );
-  await cdp("Input.dispatchMouseEvent", {
-    type: "mouseMoved",
-    x: handle.x,
-    y: handle.y,
-  });
-  await cdp("Input.dispatchMouseEvent", {
-    type: "mousePressed",
-    button: "left",
-    clickCount: 1,
-    x: handle.x,
-    y: handle.y,
-  });
-  await cdp("Input.dispatchMouseEvent", {
-    type: "mouseMoved",
-    button: "left",
-    buttons: 1,
-    x: handle.x - 330,
-    y: handle.y - 80,
-  });
-  await cdp("Input.dispatchMouseEvent", {
-    type: "mouseReleased",
-    button: "left",
-    clickCount: 1,
-    x: handle.x - 330,
-    y: handle.y - 80,
-  });
-  await waitFor(
-    "document.querySelector('.panel-keygen').getBoundingClientRect().left < " +
-      (handle.left - 250),
-  );
-  await screenshot("license-entry");
-  await setInput("#TR01-license", "AAAA-BBBB-CCCC");
-  await clickText("Register key");
-  assert(
-    await evaluate(
-      "document.querySelector('.activation-feedback').textContent.includes('Invalid')",
-    ),
-  );
-  await setInput("#TR01-license", key);
-  await clickText("Register key");
-  await waitFor("!!document.querySelector('.patch-required')");
-  assert(
-    await evaluate(
-      "!document.querySelector('.art-stage img') && !performance.getEntriesByType('resource').some(r=>r.name.includes('/art/releases/'))",
-    ),
-  );
-  await screenshot("patch-required");
-  assert(
-    await evaluate(
-      "!document.querySelector('.patch-required').textContent.toLowerCase().includes('keygen') && !document.querySelector('.patch-required button')",
-    ),
-  );
-  assert.equal(await evaluate("document.querySelector('#serial').value"), key);
-  const patchPoint = await evaluate(
-    "(()=>{const b=[...document.querySelectorAll('.keygen button')].find(b=>b.textContent.trim()==='Patch');const r=b.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()",
-  );
-  await cdp("Input.dispatchMouseEvent", { type: "mouseMoved", ...patchPoint });
-  await cdp("Input.dispatchMouseEvent", {
-    type: "mousePressed",
-    button: "left",
-    clickCount: 1,
-    ...patchPoint,
-  });
-  await cdp("Input.dispatchMouseEvent", {
-    type: "mouseReleased",
-    button: "left",
-    clickCount: 1,
-    ...patchPoint,
-  });
-
-  await waitFor(
-    "Number(document.querySelector('[role=progressbar]').getAttribute('aria-valuenow')) > 0",
-  );
-  assert(
-    await evaluate(
-      "!document.querySelector('.art-stage img') && document.querySelector('#release-select').disabled",
-    ),
-  );
-  await screenshot("patching");
-  await waitFor("document.querySelector('.art-stage img')?.naturalWidth > 0");
-  assert(
-    await evaluate(
-      "!document.querySelector('.open-programs') && [...document.querySelectorAll('.os-window')].every(el=>getComputedStyle(el).boxShadow==='none')",
-    ),
-  );
-  assert.equal(
-    await evaluate(
-      "document.querySelectorAll('.piece-overlay:not([hidden])').length",
-    ),
-    2,
-  );
-  await screenshot("art-view");
-  await click('[aria-label="Close if_looks_could_shimmer"]');
+  await click('[aria-label="Close sequence.exe"]');
+  for (const title of [
+    "if_looks_could_shimmer",
+    "empty_space",
+    "this_was_my_first_attempt",
+    "study 04",
+    "study 05",
+    "study 06",
+    "study 07",
+    "study 08",
+    "study 09",
+  ]) {
+    await click('[aria-label="Open ' + title + '"]');
+    await waitFor(
+      "document.querySelector('.piece-overlay:not([hidden]) .art-stage img')?.naturalWidth > 0",
+    );
+    assert(
+      await evaluate(
+        "!document.querySelector('.license-entry,.patch-required')",
+      ),
+    );
+    await click('[aria-label="Close ' + title + '"]');
+  }
+  assert(await evaluate("!localStorage.getItem('seq_patches_v3')"));
   await cdp("Page.reload");
   await readyScene();
   await click('[aria-label="Open if_looks_could_shimmer"]');
   await waitFor("document.querySelector('.art-stage img')?.naturalWidth > 0");
+  await screenshot("art-view");
   await cdp("Emulation.setDeviceMetricsOverride", {
     width: 390,
     height: 844,
@@ -416,7 +337,7 @@ try {
   assert(await evaluate("document.documentElement.scrollWidth <= innerWidth"));
   assert.equal(errors.length, 0, errors.join("\n"));
   console.log(
-    "PASS: all depth maps, parallax, reduced motion, dragging, license validation, single-click patch from inactive keygen, patch progress, persistence and mobile.",
+    "PASS: background effects, scroll, reduced motion, keygen music, all nine artworks open without licensing, reload and mobile.",
   );
 } finally {
   socket?.close();

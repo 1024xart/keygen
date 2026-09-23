@@ -61,8 +61,6 @@ const icons: {
 
 export default function Desktop() {
   const [apps, setApps] = useState<OpenApp[]>([]);
-  const [target, setTarget] = useState<ReleaseId>("TR01");
-  const [keygenSession, setKeygenSession] = useState(0);
   const [sound, setSound] = useState(false);
   const [soundMessage, setSoundMessage] = useState("");
   const audio = useRef<HTMLAudioElement>(null);
@@ -107,11 +105,7 @@ export default function Desktop() {
         setSoundMessage("Audio stopped. Press music to retry.");
       });
   }
-  function openKeygen(id?: ReleaseId) {
-    if (id && !apps.some((app) => app.id === "keygen")) {
-      setTarget(id);
-      setKeygenSession((session) => session + 1);
-    }
+  function openKeygen() {
     if (!muted.current) playSound();
     launch("keygen");
   }
@@ -209,12 +203,9 @@ export default function Desktop() {
         >
           {app.id === "keygen" ? (
             <Keygen
-              key={keygenSession}
-              initialRelease={target}
               sound={sound}
               onToggleSound={toggleSound}
               onExit={() => close("keygen")}
-              onLaunch={launch}
             />
           ) : app.id === "readme" ? (
             <Readme />
