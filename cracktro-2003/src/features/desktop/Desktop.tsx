@@ -1,18 +1,16 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Original desktop icons. */
-import { useRef, useState, type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import Window from "./Window";
 import ReadmeIcon from "./ReadmeIcon";
 import Scene from "./Scene";
 import { Readme } from "./Readme";
-import Keygen from "../keygen/Keygen";
 import ReleaseViewer from "../releases/ReleaseViewer";
 import { releases, type ReleaseId } from "../releases/catalog";
 
-type AppId = ReleaseId | "keygen" | "readme";
+type AppId = ReleaseId | "readme";
 type OpenApp = { id: AppId; minimized: boolean; z: number };
 const utilityTitles = {
-  keygen: "sequence.exe",
   readme: "readme.txt",
 };
 function appTitle(id: AppId) {
@@ -28,13 +26,6 @@ const icons: {
   depth: number;
   image?: string;
 }[] = [
-  {
-    id: "keygen",
-    x: 22,
-    y: 72,
-    depth: 1.3,
-    image: "/identity/banner.gif",
-  },
   { id: "TR01", x: 24, y: 25, depth: 0.75, image: "/art/thumbnails/TR01.webp" },
   {
     id: "BMR08",
@@ -46,26 +37,22 @@ const icons: {
   { id: "BR09", x: 62, y: 73, depth: 0.6, image: "/art/thumbnails/BR09.webp" },
   { id: "DS15", x: 82, y: 94, depth: 0.85, image: "/art/thumbnails/DS15.webp" },
   { id: "readme", x: 53, y: 13, depth: 0.65 },
-  { id: "ST04", x: 28, y: 112, depth: 0.7, image: "/art/thumbnails/TR01.webp" },
-  { id: "ST05", x: 76, y: 127, depth: 1, image: "/art/thumbnails/BMR08.webp" },
-  { id: "ST06", x: 48, y: 155, depth: 0.8, image: "/art/thumbnails/BR09.webp" },
-  { id: "ST07", x: 19, y: 179, depth: 1.1, image: "/art/thumbnails/TR01.webp" },
+  { id: "ST04", x: 28, y: 112, depth: 0.7, image: "/art/thumbnails/blackbar.webp" },
+  { id: "ST05", x: 76, y: 127, depth: 1, image: "/art/thumbnails/blackbar.webp" },
+  { id: "ST06", x: 48, y: 155, depth: 0.8, image: "/art/thumbnails/blackbar.webp" },
+  { id: "ST07", x: 19, y: 179, depth: 1.1, image: "/art/thumbnails/blackbar.webp" },
   {
     id: "ST08",
     x: 79,
     y: 195,
     depth: 0.6,
-    image: "/art/thumbnails/BMR08.webp",
+    image: "/art/thumbnails/blackbar.webp",
   },
-  { id: "ST09", x: 44, y: 220, depth: 0.9, image: "/art/thumbnails/BR09.webp" },
+  { id: "ST09", x: 44, y: 220, depth: 0.9, image: "/art/thumbnails/blackbar.webp" },
 ];
 
 export default function Desktop() {
   const [apps, setApps] = useState<OpenApp[]>([]);
-  const [sound, setSound] = useState(false);
-  const [soundMessage, setSoundMessage] = useState("");
-  const audio = useRef<HTMLAudioElement>(null);
-  const muted = useRef(false);
   const active = apps
     .filter((app) => !app.minimized)
     .sort((a, b) => a.z - b.z)
@@ -93,42 +80,12 @@ export default function Desktop() {
       );
     });
   }
-  function playSound() {
-    const player = audio.current;
-    if (!player) return;
-    player.volume = 0.45;
-    void player
-      .play()
-      .then(() => setSoundMessage(""))
-      .catch((cause: unknown) => {
-        if (cause instanceof DOMException && cause.name === "AbortError")
-          return;
-        setSoundMessage("Audio stopped. Press music to retry.");
-      });
-  }
-  function openKeygen() {
-    if (!muted.current) playSound();
-    launch("keygen");
-  }
   function close(id: AppId) {
-    if (id === "keygen" && audio.current) {
-      audio.current.pause();
-      audio.current.currentTime = 0;
-    }
     setApps((current) =>
       current.map((entry) =>
         entry.id === id ? { ...entry, minimized: true } : entry,
       ),
     );
-  }
-  function toggleSound() {
-    if (sound) {
-      muted.current = true;
-      audio.current?.pause();
-    } else {
-      muted.current = false;
-      playSound();
-    }
   }
 
   return (
@@ -143,28 +100,12 @@ export default function Desktop() {
         }
       }}
     >
-      <audio
-        ref={audio}
-        src="/audio/keygen.mp3"
-        loop
-        preload="auto"
-        onPlay={() => setSound(true)}
-        onPause={() => setSound(false)}
-        onError={() => {
-          setSound(false);
-          setSoundMessage("keygen.mp3 could not be loaded.");
-        }}
-      />
       <Scene>
         {icons.map((icon) => (
           <button
             key={icon.id}
             className="scene-icon"
-            aria-label={
-              icon.id === "keygen"
-                ? "Run SEQUENCE"
-                : `Open ${appTitle(icon.id)}`
-            }
+            aria-label={`Open ${appTitle(icon.id)}`}
             style={
               {
                 left: `${icon.x}%`,
@@ -172,9 +113,7 @@ export default function Desktop() {
                 "--depth": icon.depth,
               } as CSSProperties
             }
-            onClick={() =>
-              icon.id === "keygen" ? openKeygen() : launch(icon.id)
-            }
+            onClick={() => launch(icon.id)}
           >
             <span className="scene-icon-picture">
               {icon.image ? <img src={icon.image} alt="" /> : <ReadmeIcon />}
@@ -192,40 +131,17 @@ export default function Desktop() {
           active={active === app.id}
           minimized={app.minimized}
           order={app.z}
-          kind={
-            app.id === "keygen"
-              ? "keygen"
-              : app.id === "readme"
-                ? "readme"
-                : "art"
-          }
+          kind={app.id === "readme" ? "readme" : "art"}
           onFocus={() => focus(app.id)}
           onClose={() => close(app.id)}
         >
-          {app.id === "keygen" ? (
-            <Keygen
-              sound={sound}
-              onToggleSound={toggleSound}
-              onExit={() => close("keygen")}
-            />
-          ) : app.id === "readme" ? (
+          {app.id === "readme" ? (
             <Readme />
           ) : (
             <ReleaseViewer id={app.id} />
           )}
         </Window>
       ))}
-      {soundMessage && (
-        <div className="sound-notice" role="status">
-          {soundMessage}
-          <button
-            aria-label="Dismiss audio message"
-            onClick={() => setSoundMessage("")}
-          >
-            ×
-          </button>
-        </div>
-      )}
     </main>
   );
 }

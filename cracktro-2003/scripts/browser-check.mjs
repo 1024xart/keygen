@@ -177,7 +177,7 @@ try {
   await evaluate("document.fonts.ready");
   assert.equal(
     await evaluate("document.querySelectorAll('.scene-icon').length"),
-    12,
+    11,
   );
   assert(await evaluate("document.fonts.check('14px W95FA')"));
   assert(await evaluate("!document.querySelector('.art-stage img')"));
@@ -263,42 +263,7 @@ try {
     "A new visit selects a different background",
   );
 
-  await click('[aria-label="Run SEQUENCE"]');
-  await waitFor("!!document.querySelector('#serial')");
-  await waitFor(
-    "(()=>{const r=document.querySelector('.panel-keygen').getBoundingClientRect();return Math.abs(r.left+r.width/2-innerWidth/2)<2 && Math.abs(r.top+r.height/2-innerHeight/2)<2;})()",
-  );
-  await screenshot("keygen");
-  await clickText("Generate");
-  await waitFor("document.querySelector('#serial').value.length === 14");
-  assert.equal(
-    await evaluate(
-      "document.querySelector('[role=progressbar]').getAttribute('aria-valuenow')",
-    ),
-    "0",
-  );
-  assert(
-    await evaluate("!document.querySelector('.keygen-marquee,.keygen-footer')"),
-  );
-  if (
-    await evaluate(
-      "!!document.querySelector('[aria-label=\"Play keygen music\"]')",
-    )
-  )
-    await click('[aria-label="Play keygen music"]');
-  await waitFor("!document.querySelector('audio').paused");
-  await click('[aria-label="Mute keygen music"]');
-  assert(
-    await evaluate(
-      "!!document.querySelector('.lucide-volume-off') && document.querySelector('audio').paused",
-    ),
-  );
-  assert(
-    await evaluate(
-      "[...document.querySelectorAll('.keygen button')].find(b=>b.textContent.trim()==='Patch').disabled",
-    ),
-  );
-  await click('[aria-label="Close sequence.exe"]');
+  assert(await evaluate("!document.querySelector('.keygen,audio,[aria-label=\"Run SEQUENCE\"]')"));
   for (const title of [
     "if_looks_could_shimmer",
     "empty_space",
@@ -356,7 +321,7 @@ try {
   assert(await evaluate("document.documentElement.scrollWidth <= innerWidth"));
   assert.equal(errors.length, 0, errors.join("\n"));
   console.log(
-    "PASS: background effects, scroll, reduced motion, keygen music, all ten artworks open without licensing, reload and mobile.",
+    "PASS: background effects, scroll, reduced motion, all ten artworks open without licensing, reload and mobile.",
   );
 } finally {
   socket?.close();

@@ -1,6 +1,6 @@
 # SEQUENCE / art by 1024x
 
-An art site with a scrolling field of glowing thumbnails, dithered depth-map backgrounds, draggable panels, and a keygen interaction.
+An art site with a scrolling field of glowing thumbnails, dithered depth-map backgrounds, and draggable panels.
 
 ## Run
 
@@ -19,9 +19,9 @@ Open http://localhost:3000. For production, run `npm.cmd run build`, then `npm.c
 - Six temporary study icons reuse those artworks for testing scroll and activation.
 - Seven stock backgrounds in the brutalist nature collection. Excluded photo IDs stay excluded during imports.
 
-Every artwork opens immediately without a key or patch, including the study placeholders. The keygen retains music and standalone key generation; it has no patch target while its future single-purpose unlock is being designed.
+Every artwork opens immediately without a key or patch, including the study placeholders. The six study placeholders use blackbar.png. The keygen is currently removed from the live page; its source and assets are retained for later.
 
-Panels open centered and can be dragged by their handles. Background clicks dismiss them; reopening preserves the current key. Opening the keygen starts its soundtrack; the speaker toggles music and closing stops it. Holding empty background amplifies the depth distortion. Reduced-motion preferences disable scene animation; original artwork GIFs remain animated.
+Panels open centered and can be dragged by their handles. Background clicks dismiss them. Holding empty background amplifies the depth distortion. Reduced-motion preferences disable scene animation; original artwork GIFs remain animated.
 
 ## Files
 
