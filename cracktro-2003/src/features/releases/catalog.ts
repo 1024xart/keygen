@@ -1,5 +1,28 @@
 export const releases = [
   {
+    id: "WT01",
+    number: "012",
+    title: "the_watcher",
+    file: "/art/releases/the_watcher.png",
+    dimensions: [[816, 1456]],
+    size: "816 x 1456",
+    version: "1.0",
+  },
+  {
+    id: "MH01",
+    number: "011",
+    title: "a_study_in_metalheart",
+    dimensions: [[896, 1344], [1792, 2688], [1792, 2688]],
+    file: "/art/releases/metalheart/study1.png",
+    images: [
+      "/art/releases/metalheart/study1.png",
+      "/art/releases/metalheart/study2.png",
+      "/art/releases/metalheart/study3.png",
+    ],
+    size: "3 images",
+    version: "1.0",
+  },
+  {
     id: "DS15",
     number: "010",
     title: "dark_souls_15",

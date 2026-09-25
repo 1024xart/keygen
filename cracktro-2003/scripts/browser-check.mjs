@@ -177,7 +177,7 @@ try {
   await evaluate("document.fonts.ready");
   assert.equal(
     await evaluate("document.querySelectorAll('.scene-icon').length"),
-    11,
+    13,
   );
   assert(await evaluate("document.fonts.check('14px W95FA')"));
   assert(await evaluate("!document.querySelector('.art-stage img')"));
@@ -268,6 +268,8 @@ try {
     "if_looks_could_shimmer",
     "empty_space",
     "this_was_my_first_attempt",
+    "a_study_in_metalheart",
+    "the_watcher",
     "study 04",
     "dark_souls_15",
     "study 05",
@@ -285,6 +287,27 @@ try {
         "!document.querySelector('.license-entry,.patch-required')",
       ),
     );
+    await click('[aria-label="Close ' + title + '"]');
+  }
+  await click('[aria-label="Open a_study_in_metalheart"]');
+  for (const [button, study] of [["Next image", 2], ["Next image", 3], ["Next image", 1], ["Previous image", 3]]) {
+    await click('[aria-label="' + button + '"]');
+    await waitFor(`(() => { const image = document.querySelector('.art-album img'); return image.src.endsWith('study${study}.png') && image.complete && image.naturalWidth > 0; })()`);
+  }
+  await click('[aria-label="Close a_study_in_metalheart"]');
+  await cdp("Emulation.setDeviceMetricsOverride", {
+    width: 2400, height: 3100, deviceScaleFactor: 1, mobile: false,
+  });
+  for (const title of ["the_watcher", "a_study_in_metalheart"]) {
+    await click('[aria-label="Open ' + title + '"]');
+    for (let i = 0; i < (title === "the_watcher" ? 1 : 3); i++) {
+      await waitFor(`(() => {
+        const image = document.querySelector('.piece-overlay:not([hidden]) .art-stage img');
+        const r = image.getBoundingClientRect();
+        return image.complete && image.naturalWidth > 0 && Math.abs(r.width * devicePixelRatio - image.naturalWidth) < 2 && Math.abs(r.height * devicePixelRatio - image.naturalHeight) < 2;
+      })()`, "native portrait dimensions");
+      if (title !== "the_watcher") await click('[aria-label="Next image"]');
+    }
     await click('[aria-label="Close ' + title + '"]');
   }
   assert(await evaluate("!localStorage.getItem('seq_patches_v3')"));
@@ -321,7 +344,7 @@ try {
   assert(await evaluate("document.documentElement.scrollWidth <= innerWidth"));
   assert.equal(errors.length, 0, errors.join("\n"));
   console.log(
-    "PASS: background effects, scroll, reduced motion, all ten artworks open without licensing, reload and mobile.",
+    "PASS: background effects, scroll, reduced motion, all twelve artworks and album navigation open without licensing, reload and mobile.",
   );
 } finally {
   socket?.close();

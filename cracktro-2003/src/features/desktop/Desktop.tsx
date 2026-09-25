@@ -37,6 +37,8 @@ const icons: {
   { id: "BR09", x: 62, y: 73, depth: 0.6, image: "/art/thumbnails/BR09.webp" },
   { id: "DS15", x: 82, y: 94, depth: 0.85, image: "/art/thumbnails/DS15.webp" },
   { id: "readme", x: 53, y: 13, depth: 0.65 },
+  { id: "WT01", x: 47, y: 102, depth: 0.8, image: "/art/thumbnails/WT01.webp" },
+  { id: "MH01", x: 22, y: 72, depth: 0.9, image: "/art/thumbnails/MH01.webp" },
   { id: "ST04", x: 28, y: 112, depth: 0.7, image: "/art/thumbnails/blackbar.webp" },
   { id: "ST05", x: 76, y: 127, depth: 1, image: "/art/thumbnails/blackbar.webp" },
   { id: "ST06", x: 48, y: 155, depth: 0.8, image: "/art/thumbnails/blackbar.webp" },
