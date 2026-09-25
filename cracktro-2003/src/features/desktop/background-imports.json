@@ -41,16 +41,16 @@
       "license": "https://www.pexels.com/license/"
     },
     {
-      "id": "brutalist-nature-15796474",
-      "src": "/wallpapers/stock/brutalist-nature-15796474.jpg",
-      "depth": "/wallpapers/stock/brutalist-nature-15796474-depth.png",
+      "id": "brutalist-nature-30383704",
+      "src": "/wallpapers/stock/brutalist-nature-30383704.jpg",
+      "depth": "/wallpapers/stock/brutalist-nature-30383704-depth.png",
       "category": "brutalist nature",
-      "photoId": 15796474,
+      "photoId": 30383704,
       "credit": {
-        "photographer": "Robert So",
-        "url": "https://www.pexels.com/photo/sunlit-building-wall-with-bars-15796474/"
+        "photographer": "Mike Norris",
+        "url": "https://www.pexels.com/photo/abandoned-building-overrun-by-nature-30383704/"
       },
-      "importedAt": "2026-09-23T03:07:48.559Z",
+      "importedAt": "2026-09-25T02:10:52.040Z",
       "license": "https://www.pexels.com/license/"
     },
     {
@@ -94,6 +94,7 @@
     }
   ],
   "excludedPhotoIds": [
-    18267104
+    18267104,
+    15796474
   ]
 }
